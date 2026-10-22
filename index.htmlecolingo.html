@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="EcoLingo: a gamified SDG learning web app for UM students.">
+<title>EcoLingo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: a phone-width app shell (header, scrolling view, 5-tab bar). On desktop it sits in a framed device beside a short project note, over a faint contour-map ground. */
+:root{
+  --bg:#EEF4EE; --stage:#E3ECE2; --topo:#D3E0D2; --surface:#FCFEFB; --surface-2:#E3EBE2;
+  --line:#D2DDD0; --line-strong:#A8BBA8;
+  --ink:#13261B; --muted:#55695B;
+  --accent:#1C8549; --accent-deep:#11653A; --accent-ink:#FFFFFF; --accent-soft:#D2ECDA;
+  --sun:#D58A00; --sun-soft:#FBECC8; --ember:#E0531F;
+  --good:#1C8549; --good-soft:#D2ECDA; --bad:#C2352F; --bad-soft:#F8DCDA;
+  --hero:#163B27; --hero-ink:#EAF5EC; --hero-muted:#A6C5AF; --hero-track:#2A5640;
+  --soil:#D7CDBB; --stem:#2E7D4A; --on-sdg:#FFFFFF; --medal-ink:#21190A;
+  --gold:#E5AC2A; --silver:#B7C3C0; --bronze:#C98A55;
+  --scrim:rgba(8,22,14,.5);
+  --shadow:0 1px 2px rgba(19,38,27,.05),0 6px 16px rgba(19,38,27,.06);
+  --shadow-lg:0 30px 80px rgba(19,38,27,.2);
+  --f-display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1510; --stage:#08100B; --topo:#13221A; --surface:#14211A; --surface-2:#1C2D23;
+    --line:#25382C; --line-strong:#40594A; --ink:#E5F0E7; --muted:#93AA9A;
+    --accent:#3FBF73; --accent-deep:#21834A; --accent-ink:#062010; --accent-soft:#183A26;
+    --sun:#F4BA45; --sun-soft:#3A2D10; --ember:#FF7A45;
+    --good:#3FBF73; --good-soft:#183A26; --bad:#F2716B; --bad-soft:#3F1B1A;
+    --hero:#173826; --hero-ink:#E8F5EC; --hero-muted:#9CC2A8; --hero-track:#264C36;
+    --soil:#2E2B21; --stem:#4FB777; --scrim:rgba(0,0,0,.6);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.25); --shadow-lg:0 30px 80px rgba(0,0,0,.55);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1510; --stage:#08100B; --topo:#13221A; --surface:#14211A; --surface-2:#1C2D23;
+  --line:#25382C; --line-strong:#40594A; --ink:#E5F0E7; --muted:#93AA9A;
+  --accent:#3FBF73; --accent-deep:#21834A; --accent-ink:#062010; --accent-soft:#183A26;
+  --sun:#F4BA45; --sun-soft:#3A2D10; --ember:#FF7A45;
+  --good:#3FBF73; --good-soft:#183A26; --bad:#F2716B; --bad-soft:#3F1B1A;
+  --hero:#173826; --hero-ink:#E8F5EC; --hero-muted:#9CC2A8; --hero-track:#264C36;
+  --soil:#2E2B21; --stem:#4FB777; --scrim:rgba(0,0,0,.6);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.25); --shadow-lg:0 30px 80px rgba(0,0,0,.55);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+
+html{height:100%}
+body{height:100%;margin:0;background:var(--stage);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-font-smoothing:antialiased;overflow:hidden}
+h1,h2,h3,p{margin:0}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.i{width:20px;height:20px;flex:none;display:block}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shell ---------- */
+.stage{height:100%;display:flex;justify-content:center;align-items:stretch}
+.app{position:relative;display:flex;flex-direction:column;width:100%;max-width:560px;height:100%;background:var(--bg);overflow:hidden;isolation:isolate}
+.about{display:none}
+@media (min-width:560px) and (max-width:959px){.app{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
+@media (min-width:960px){
+  body{background-image:repeating-radial-gradient(ellipse 120% 90% at 12% 88%,transparent 0 30px,var(--topo) 30px 31.5px)}
+  .stage{align-items:center;gap:64px;padding-block:24px;padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}
+  .app{width:410px;flex:none;height:min(880px,100%);border:1px solid var(--line);border-radius:36px;box-shadow:var(--shadow-lg)}
+  .about{display:flex}
+}
+
+.topbar{flex:none;display:flex;align-items:center;gap:8px;padding-block:14px 10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:9px;margin-right:auto;font:800 21px/1 var(--f-display);letter-spacing:-.03em}
+.mark{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--accent);color:var(--accent-ink);transform:rotate(-6deg)}
+.mark .i{width:19px;height:19px}
+.pill{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 10px 0 8px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.pill .i{width:17px;height:17px}
+.pill.pts .i{color:var(--sun)} .pill.streak .i{color:var(--ember)}
+.avatar{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font:800 13px var(--f-display);border:1px solid var(--line)}
+
+.view{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-block:4px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.screen{display:flex;flex-direction:column;gap:18px;animation:rise .38s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:.35;transform:translateY(10px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(48px);opacity:.3}}
+
+.tabbar{flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;padding-block:6px 8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--surface);border-top:1px solid var(--line)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;padding-block:3px;color:var(--muted);font-size:10.5px;font-weight:700;letter-spacing:.01em}
+.tab .lbl{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab .pip{display:grid;place-items:center;width:48px;height:30px;border-radius:15px;transition:background .25s}
+.tab[aria-selected="true"]{color:var(--accent)}
+.tab[aria-selected="true"] .pip{background:var(--accent-soft)}
+.tab[aria-selected="true"] .i{animation:hop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes hop{0%{transform:scale(.7) translateY(3px)}}
+
+/* ---------- type ---------- */
+.eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.h1{font:800 28px/1.08 var(--f-display);letter-spacing:-.025em;text-wrap:balance}
+.h2{font:750 19px/1.2 var(--f-display);letter-spacing:-.015em;text-wrap:balance}
+.muted{color:var(--muted)} .smt{font-size:13px}
+.head{display:flex;flex-direction:column;gap:4px;padding-top:4px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:4px}
+
+/* ---------- controls ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:15px;box-shadow:0 3px 0 var(--accent-deep);transition:transform .12s,box-shadow .12s,background .2s}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--accent-deep)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13.5px;border-radius:11px}
+.btn.ghost{background:var(--surface-2);color:var(--ink);box-shadow:0 3px 0 var(--line-strong)}
+.btn.ghost:active:not(:disabled){box-shadow:0 1px 0 var(--line-strong)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:default}
+.btn .i{width:18px;height:18px}
+.icon-btn{display:grid;place-items:center;width:38px;height:38px;flex:none;border-radius:12px;background:var(--surface-2);color:var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;background:var(--surface-2);color:var(--ink);white-space:nowrap}
+.chip .i{width:14px;height:14px}
+.chip.next{background:var(--accent);color:var(--accent-ink)}
+.chip.sun{background:var(--sun-soft);color:var(--ink)}
+.chip.sun .i{color:var(--sun)}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:var(--shadow)}
+
+/* SDG tile: the UN goal square, number-first */
+.sdg-tile{position:relative;display:grid;place-items:center;flex:none;width:64px;height:64px;border-radius:14px;background:var(--unit);color:var(--on-sdg)}
+.sdg-tile small{position:absolute;top:6px;left:7px;font-size:8.5px;font-weight:700;letter-spacing:.08em;opacity:.92}
+.sdg-tile b{font:800 28px/1 var(--f-display);margin-top:9px;letter-spacing:-.02em}
+.sdg-tile.sm{width:44px;height:44px;border-radius:11px}
+.sdg-tile.sm small{font-size:7px;top:4px;left:5px}
+.sdg-tile.sm b{font-size:19px;margin-top:7px}
+
+/* ---------- learn ---------- */
+.grow{display:grid;grid-template-columns:118px minmax(0,1fr);gap:12px;align-items:center;padding:12px 16px 12px 6px;background:linear-gradient(160deg,var(--accent-soft),var(--surface) 72%)}
+.plant{width:118px;height:auto;display:block;overflow:visible}
+.stem{stroke-dasharray:1;stroke-dashoffset:0}
+.stem.draw{animation:draw 1.1s ease-out}
+@keyframes draw{from{stroke-dashoffset:1}}
+.leaf{transform-box:fill-box;transform-origin:0% 60%}
+.leaf.on{fill:var(--c)}
+.leaf.off{fill:none;stroke:var(--line-strong);stroke-width:1.5;stroke-dasharray:3 3}
+.leaf.pop{animation:leafpop .8s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d,0s)}
+@keyframes leafpop{from{transform:scale(0) rotate(-25deg)}}
+.vein{fill:none;stroke:rgba(255,255,255,.45);stroke-width:1.2;stroke-linecap:round}
+.bloom{transform-box:fill-box;transform-origin:center;animation:leafpop 1s cubic-bezier(.3,1.6,.5,1) both}
+.grow-text{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:0}
+.grow-big{font:800 30px/1 var(--f-display);letter-spacing:-.03em}
+.grow-big span{font-size:15px;font-weight:600;color:var(--muted);letter-spacing:0}
+.grow-text .muted{font-size:13px}
+
+.units{display:flex;flex-direction:column;gap:10px}
+.unit{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center;width:100%;text-align:left;padding:10px 14px 10px 10px;background:var(--surface);border:1px solid var(--line);border-radius:20px;transition:transform .15s,border-color .2s}
+.unit:hover{border-color:var(--line-strong)}
+.unit:active{transform:scale(.985)}
+.unit.is-next{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.unit-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.unit-title{font:750 17px/1.2 var(--f-display);letter-spacing:-.01em}
+.unit-sub{font-size:13px;color:var(--muted)}
+.status{display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;font-weight:700;color:var(--muted)}
+.status .i{width:14px;height:14px}
+.status.done{color:var(--good)}
+.unit-end{color:var(--muted)}
+.ok-dot{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--good);color:var(--accent-ink)}
+.ok-dot .i{width:16px;height:16px;stroke-width:2.6}
+
+/* ---------- quiz ---------- */
+.mix{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:18px;border-radius:24px;background:var(--hero);color:var(--hero-ink);overflow:hidden;position:relative}
+.mix .eyebrow{color:var(--hero-muted)}
+.mix h2{font:800 23px/1.1 var(--f-display);letter-spacing:-.02em;margin-top:4px}
+.mix p{font-size:13.5px;color:var(--hero-muted);margin-top:6px}
+.mix .btn{margin-top:14px}
+.mix-art{display:grid;grid-template-columns:repeat(2,30px);gap:6px;transform:rotate(8deg)}
+.mix-art span{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font:800 13px var(--f-display);color:var(--on-sdg)}
+.mix-art span:nth-child(2){transform:translateY(10px)} .mix-art span:nth-child(4){transform:translateY(10px)}
+.qrow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;text-align:left;padding:10px 12px 10px 10px;border-radius:18px;background:var(--surface);border:1px solid var(--line);transition:border-color .2s,transform .15s}
+.qrow:hover{border-color:var(--line-strong)} .qrow:active{transform:scale(.985)}
+.qrow .t{font:750 16px/1.2 var(--f-display)}
+.qrow .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+.best{display:flex;gap:3px;margin-top:6px}
+.best i{width:14px;height:5px;border-radius:3px;background:var(--surface-2)}
+.best i.on{background:var(--unit)}
+.rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rule{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.rule b{font:800 18px var(--f-display);color:var(--sun);font-variant-numeric:tabular-nums}
+.rule span{font-size:12px;color:var(--muted);line-height:1.3}
+
+.q-top{display:flex;align-items:center;gap:12px;padding-top:4px}
+.segs{flex:1;display:flex;gap:5px}
+.segs span{flex:1;height:8px;border-radius:4px;background:var(--surface-2);transition:background .3s}
+.segs .ok{background:var(--good)} .segs .no{background:var(--bad)} .segs .cur{background:var(--line-strong)} .segs .on{background:var(--unit)}
+.q-count{font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.q-card{display:flex;flex-direction:column;gap:12px;padding-block:8px 4px}
+.unit-chip{align-self:flex-start;display:inline-flex;align-items:center;gap:7px;padding:4px 11px 4px 4px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:12px;font-weight:700}
+.unit-chip span{display:grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:7px;background:var(--unit);color:var(--on-sdg);font:800 11px var(--f-display)}
+.q-text{font:750 23px/1.22 var(--f-display);letter-spacing:-.015em;text-wrap:balance}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;text-align:left;padding:11px 14px 11px 11px;border-radius:16px;background:var(--surface);border:1.5px solid var(--line);box-shadow:0 3px 0 var(--line);font-weight:600;transition:border-color .2s,background .2s,opacity .25s}
+.opt .k{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--surface-2);font:800 15px var(--f-display);color:var(--muted)}
+.opt:hover:not(:disabled){border-color:var(--line-strong)}
+.opt:disabled{cursor:default}
+.opt .mk{opacity:0} .opt .mk .i{width:20px;height:20px;stroke-width:2.6}
+.opt.correct{border-color:var(--good);background:var(--good-soft);box-shadow:0 3px 0 var(--good)}
+.opt.correct .k{background:var(--good);color:var(--accent-ink)}
+.opt.correct .mk{opacity:1;color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);box-shadow:0 3px 0 var(--bad)}
+.opt.wrong .k{background:var(--bad);color:var(--bg)}
+.opt.wrong .mk{opacity:1;color:var(--bad)}
+.opt.dim{opacity:.5}
+.pulse{animation:pulse .5s ease-out} .shake{animation:shake .45s ease-in-out}
+@keyframes pulse{40%{transform:scale(1.035)}}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.feedback{display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:18px;animation:rise .3s cubic-bezier(.2,.8,.2,1)}
+.feedback.ok{background:var(--good-soft)} .feedback.no{background:var(--bad-soft)}
+.fb-h{display:flex;align-items:center;gap:8px;font:800 18px var(--f-display)}
+.feedback.ok .fb-h{color:var(--good)} .feedback.no .fb-h{color:var(--bad)}
+.feedback p{font-size:14.5px}
+.feedback .btn{margin-top:6px}
+
+.result{align-items:center;text-align:center;padding-top:10px}
+.ring{position:relative;width:176px;height:176px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .trk{fill:none;stroke:var(--surface-2);stroke-width:12}
+.ring .val{fill:none;stroke:var(--unit);stroke-width:12;stroke-linecap:round;animation:ringfill 1.2s cubic-bezier(.2,.8,.2,1)}
+@keyframes ringfill{from{stroke-dasharray:0 100}}
+.ring-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-c b{font:800 52px/1 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.ring-c span{font-size:13px;color:var(--muted);font-weight:700}
+.result .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.result .acts{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;margin-top:6px}
+.recap{width:100%;display:flex;flex-direction:column;gap:6px;text-align:left}
+.recap li{list-style:none;display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:13.5px;padding:8px 10px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.recap li .i{width:18px;height:18px;stroke-width:2.6}
+.recap .y .i{color:var(--good)} .recap .n .i{color:var(--bad)}
+.recap ul{margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+
+/* ---------- badges ---------- */
+.level{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:24px;background:var(--hero);color:var(--hero-ink);position:relative;overflow:hidden}
+.level .eyebrow{color:var(--hero-muted)}
+.lv-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.lv-big{font:800 54px/.9 var(--f-display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.lv-big span{font-size:16px;letter-spacing:0;font-weight:700;color:var(--hero-muted);margin-left:4px}
+.lv-name{text-align:right}
+.lv-name b{display:block;font:800 22px/1.1 var(--f-display)}
+.lv-name small{font-size:12.5px;color:var(--hero-muted)}
+.bar{height:10px;border-radius:5px;background:var(--hero-track);overflow:hidden}
+.bar i{display:block;height:100%;width:var(--w);border-radius:inherit;background:var(--sun);animation:fillw 1.1s cubic-bezier(.2,.8,.2,1)}
+@keyframes fillw{from{width:0}}
+.ladder{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;position:relative}
+.ladder::before{content:"";position:absolute;left:10%;right:10%;top:6px;height:2px;background:var(--hero-track)}
+.rung{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10.5px;color:var(--hero-muted);font-weight:700}
+.rung .n{width:14px;height:14px;border-radius:50%;border:2px solid var(--hero-muted);background:var(--hero)}
+.rung.on .n{background:var(--sun);border-color:var(--sun)}
+.rung.cur{color:var(--hero-ink)}
+.rung.cur .n{box-shadow:0 0 0 4px var(--hero-track)}
+.bgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.badge{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:20px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.emb{position:relative;display:grid;place-items:center;width:52px;height:52px;flex:none;border-radius:50%;background:var(--bc);color:var(--bi,var(--on-sdg));box-shadow:inset 0 0 0 4px rgba(255,255,255,.28)}
+.emb .i{width:24px;height:24px}
+.badge.earned .emb{animation:shine 3.5s ease-in-out infinite;animation-delay:var(--d)}
+@keyframes shine{0%,85%,100%{transform:none}90%{transform:rotate(-10deg) scale(1.06)}95%{transform:rotate(8deg) scale(1.06)}}
+.badge.locked .emb{background:var(--surface-2);color:var(--muted);box-shadow:none}
+.lk{position:absolute;right:-3px;bottom:-3px;display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.lk .i{width:11px;height:11px;stroke-width:2.4}
+.badge h3{font:750 15px/1.2 var(--f-display)}
+.badge p{font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.mini{display:flex;align-items:center;gap:8px;margin-top:auto;font-size:11.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.mini .track{flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.mini .track i{display:block;height:100%;width:var(--w);background:var(--line-strong);border-radius:inherit}
+.earned-on{margin-top:auto;font-size:11.5px;font-weight:700;color:var(--good);display:flex;align-items:center;gap:4px}
+.earned-on .i{width:13px;height:13px;stroke-width:2.6}
+
+/* ---------- challenges ---------- */
+.wk{display:flex;flex-direction:column;gap:14px;padding:18px;border-radius:24px;background:var(--hero);color:var(--hero-ink)}
+.wk .eyebrow{color:var(--hero-muted)}
+.wk-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.wk-stat b{display:block;font:800 34px/1 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.wk-stat span{font-size:12.5px;color:var(--hero-muted)}
+.goal{display:flex;flex-direction:column;gap:6px}
+.goal-l{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--hero-muted)}
+.goal-l b{color:var(--hero-ink);font-variant-numeric:tabular-nums}
+.chals{display:flex;flex-direction:column;gap:10px}
+.chal{position:relative;display:grid;grid-template-columns:46px minmax(0,1fr);gap:12px;padding:14px;border-radius:20px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chal.feat{border-color:var(--sun);box-shadow:0 0 0 3px var(--sun-soft)}
+.chal-ico{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:var(--c);color:var(--on-sdg)}
+.chal-ico .i{width:23px;height:23px}
+.chal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.chal h3{font:750 16px/1.25 var(--f-display)}
+.chal .tag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.chal .tag.spot{color:var(--sun)}
+.chal p{font-size:13.5px;color:var(--muted);margin-top:4px}
+.chal-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px}
+.week{display:flex;gap:4px}
+.dot{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--surface-2);font-size:10px;font-weight:700;color:var(--muted)}
+.dot.on{background:var(--c);color:var(--on-sdg)}
+.dot.today{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.dot.future{opacity:.4}
+.btn.is-done{background:var(--good-soft);color:var(--good);box-shadow:none;opacity:1}
+.stamp{position:absolute;right:18px;top:50%;margin-top:-34px;display:grid;place-items:center;width:68px;height:68px;border-radius:50%;border:3px solid var(--good);color:var(--good);background:var(--surface);opacity:0;pointer-events:none}
+.stamp .i{width:34px;height:34px;stroke-width:2.8}
+.stamped .stamp{animation:stamp 1.1s cubic-bezier(.3,1.4,.5,1) forwards}
+@keyframes stamp{0%{opacity:0;transform:scale(1.9) rotate(-22deg)}30%{opacity:1;transform:scale(1) rotate(-12deg)}75%{opacity:1;transform:scale(1) rotate(-12deg)}100%{opacity:0;transform:scale(.9) rotate(-12deg)}}
+
+/* ---------- leaderboard ---------- */
+.seg{display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:14px;background:var(--surface-2)}
+.seg button{height:36px;border-radius:10px;font-weight:700;font-size:14px;color:var(--muted);transition:background .2s,color .2s}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:8px;padding-top:6px}
+.pod{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;text-align:center}
+.pod .crown{color:var(--gold);height:20px}
+.pod .crown .i{width:20px;height:20px}
+.pod-name{font-weight:700;font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px}
+.pod-pts{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pod-block{width:100%;display:grid;place-items:start center;padding-top:8px;margin-top:6px;border-radius:14px 14px 4px 4px;font:800 26px var(--f-display);color:var(--medal-ink);transform-origin:bottom;animation:raise .7s cubic-bezier(.2,.8,.2,1) both}
+.p1 .pod-block{height:100px;background:var(--gold);animation-delay:.15s}
+.p2 .pod-block{height:74px;background:var(--silver)}
+.p3 .pod-block{height:56px;background:var(--bronze);animation-delay:.08s}
+@keyframes raise{from{transform:scaleY(.15)}}
+.av{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:50%;background:var(--av);color:var(--on-sdg);font:800 14px var(--f-display)}
+.av.lg{width:54px;height:54px;font-size:19px}
+.me .av{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent)}
+.you{font-size:10.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.rows{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:26px 36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 12px 8px 8px;border-radius:14px;background:var(--surface);border:1px solid var(--line);animation:rise .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k) * 45ms)}
+.row.me{border-color:var(--accent);background:var(--accent-soft)}
+.rk{font:800 15px var(--f-display);color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt{font-weight:700;font-variant-numeric:tabular-nums}
+.pt small{font-weight:400;color:var(--muted)}
+.me-card{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.me-card b{font:800 30px/1 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.me-card p{font-size:13.5px}
+.fine{font-size:12px;color:var(--muted);text-align:center}
+
+/* ---------- sheets & overlays ---------- */
+#sheet:empty,#modal:empty{display:none}
+.sheet{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;background:var(--bg)}
+.sheet.enter{animation:up .4s cubic-bezier(.2,.8,.2,1)}
+.sheet-top{display:flex;align-items:center;gap:12px;padding-block:14px 6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.lesson-scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding-block:12px 20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.lesson-head{display:flex;align-items:center;gap:12px}
+.lesson-unit{font:750 18px/1.2 var(--f-display)}
+.lesson-card{position:relative;display:flex;flex-direction:column;gap:14px;padding:22px 20px 20px;border-radius:24px;background:var(--surface);border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow)}
+.card-num{position:absolute;right:16px;top:8px;font:800 68px/1 var(--f-display);color:var(--unit);opacity:.16;letter-spacing:-.04em}
+.lesson-card h2{font:800 25px/1.12 var(--f-display);letter-spacing:-.02em;text-wrap:balance;padding-right:64px}
+.lesson-card > p{font-size:16.5px;line-height:1.55}
+.fact{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:12px 14px;border-radius:16px;background:var(--sun-soft)}
+.fact .i{color:var(--sun);width:22px;height:22px}
+.fact b{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em}
+.fact p{font-size:14px;line-height:1.45;margin-top:2px}
+.slide-r{animation:sr .38s cubic-bezier(.2,.8,.2,1)}
+.slide-l{animation:sl .38s cubic-bezier(.2,.8,.2,1)}
+@keyframes sr{from{transform:translateX(36px);opacity:.2}}
+@keyframes sl{from{transform:translateX(-36px);opacity:.2}}
+.sheet-foot{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;padding-block:12px 16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-top:1px solid var(--line);background:var(--surface)}
+.lesson-done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.done-burst{display:grid;place-items:center;width:112px;height:112px;border-radius:50%;background:var(--unit);color:var(--on-sdg);box-shadow:0 0 0 10px var(--surface-2);animation:burst .7s cubic-bezier(.3,1.6,.5,1)}
+.done-burst .i{width:56px;height:56px;stroke-width:2.6}
+@keyframes burst{from{transform:scale(.3)}}
+.lesson-done h2{font:800 28px/1.1 var(--f-display);letter-spacing:-.02em;margin-top:8px}
+.done-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin-top:10px}
+
+.scrim{position:absolute;inset:0;z-index:30;background:var(--scrim);animation:fade .25s}
+.bsheet{position:absolute;left:0;right:0;bottom:0;z-index:31;display:flex;flex-direction:column;gap:12px;padding-block:10px 22px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));background:var(--surface);border-radius:26px 26px 0 0;animation:up .35s cubic-bezier(.2,.8,.2,1)}
+.grabber{width:40px;height:5px;border-radius:3px;background:var(--line-strong);align-self:center;margin-bottom:6px}
+.nick-row{display:flex;gap:8px}
+.nick-row input{flex:1;min-width:0;height:46px;padding:0 14px;border-radius:14px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+.nick-row input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.divider{height:1px;background:var(--line);margin-block:4px}
+.ctl-row{display:flex;gap:8px;flex-wrap:wrap}
+.ctl-row .btn{flex:1 1 140px}
+.bsheet .note{font-size:13px;color:var(--muted)}
+
+.modal-wrap{position:absolute;inset:0;z-index:60;display:grid;place-items:center;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));background:var(--scrim);animation:fade .25s}
+.modal{width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:28px 22px 20px;border-radius:28px;background:var(--surface);animation:mpop .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes mpop{from{transform:scale(.7);opacity:0}}
+.modal .emb{width:100px;height:100px;margin-bottom:10px;box-shadow:inset 0 0 0 6px rgba(255,255,255,.28),0 0 0 8px var(--surface-2);animation:spin 1s cubic-bezier(.3,1.4,.5,1)}
+.modal .emb .i{width:46px;height:46px}
+@keyframes spin{from{transform:perspective(400px) rotateY(220deg) scale(.4)}}
+.modal h2{font:800 24px/1.15 var(--f-display);letter-spacing:-.02em}
+.modal p{color:var(--muted);font-size:14.5px}
+.modal .btn{width:100%;margin-top:12px}
+#confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:70}
+.float-pts{position:absolute;z-index:65;pointer-events:none;font:800 24px var(--f-display);color:var(--sun);text-shadow:0 2px 0 var(--surface),0 0 12px var(--surface);white-space:nowrap}
+.toast{position:absolute;left:50%;bottom:84px;z-index:55;transform:translateX(-50%);padding:10px 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:700;font-size:14px;white-space:nowrap;animation:toast 2.4s forwards;pointer-events:none}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,10px)}10%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+
+/* ---------- desktop note ---------- */
+.about{flex-direction:column;gap:22px;width:300px;flex:none}
+.about .wm{display:flex;align-items:center;gap:12px;font:800 40px/1 var(--f-display);letter-spacing:-.04em}
+.about .wm .mark{width:46px;height:46px;border-radius:14px}
+.about .wm .mark .i{width:26px;height:26px}
+.about .lede{font-size:16px;line-height:1.45;max-width:30ch}
+.about .meta{font-size:12.5px;color:var(--muted)}
+.about-nav{display:flex;flex-direction:column;gap:4px}
+.about-nav button{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:9px 10px;border-radius:12px;text-align:left;transition:background .2s}
+.about-nav button:hover{background:var(--surface)}
+.about-nav button.on{background:var(--surface);box-shadow:var(--shadow)}
+.about-nav .n{font:800 13px/22px var(--f-display);color:var(--muted)}
+.about-nav button.on .n{color:var(--accent)}
+.about-nav b{display:block;font:750 15px/1.3 var(--f-display)}
+.about-nav span{font-size:12.5px;color:var(--muted);line-height:1.35}
+.scope{display:flex;flex-wrap:wrap;gap:6px}
+.scope .chip{background:var(--surface);border:1px solid var(--line);font-weight:600;color:var(--muted)}
+.scope .chip .i{color:var(--bad)}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <aside class="about" aria-label="About this prototype">
+    <div class="wm"><span class="mark" data-ic="sprout"></span>EcoLingo</div>
+    <p class="lede">A gamified SDG learning web app for UM students. Short lessons, quick quizzes and weekly eco-actions.</p>
+    <p class="meta">Clickable prototype · WIX2002 Project Management · Team 2 · Supports SDG 4.7 and SDG 12</p>
+    <div>
+      <p class="eyebrow" style="margin-bottom:8px">Five modules</p>
+      <nav class="about-nav">
+        <button data-act="tab" data-tab="learn"><span class="n">1</span><span><b>Lessons</b><span>Four short units that grow your SDG plant</span></span></button>
+        <button data-act="tab" data-tab="quiz"><span class="n">2</span><span><b>Quiz</b><span>20 questions with instant feedback</span></span></button>
+        <button data-act="tab" data-tab="badges"><span class="n">3</span><span><b>Points and badges</b><span>Levels from Seedling to Forest, eight badges</span></span></button>
+        <button data-act="tab" data-tab="challenges"><span class="n">4</span><span><b>Eco-action challenges</b><span>Daily check-ins for five weekly actions</span></span></button>
+        <button data-act="tab" data-tab="leaderboard"><span class="n">5</span><span><b>Leaderboard</b><span>Weekly and all-time ranks by nickname</span></span></button>
+      </nav>
+    </div>
+    <div>
+      <p class="eyebrow" style="margin-bottom:8px">Not in this prototype</p>
+      <div class="scope">
+        <span class="chip" data-icx>Login or accounts</span>
+        <span class="chip" data-icx>Native mobile app</span>
+        <span class="chip" data-icx>Cross-device sync</span>
+        <span class="chip" data-icx>Languages other than English</span>
+        <span class="chip" data-icx>Real prizes</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="brand"><span class="mark" data-ic="sprout"></span>EcoLingo</div>
+      <span class="pill streak" title="Day streak"><span data-ic="flame"></span><span id="streakN">0</span><span class="sr"> day streak</span></span>
+      <span class="pill pts" id="ptsPill" title="Points"><span data-ic="star"></span><span id="ptsN">0</span><span class="sr"> points</span></span>
+      <button class="avatar" id="avatar" data-act="profile" aria-label="Edit nickname">E</button>
+    </header>
+    <main class="view" id="view" aria-live="polite"></main>
+    <nav class="tabbar" role="tablist" aria-label="EcoLingo sections">
+      <button class="tab" role="tab" data-act="tab" data-tab="learn"><span class="pip" data-ic="learn"></span><span class="lbl">Learn</span></button>
+      <button class="tab" role="tab" data-act="tab" data-tab="quiz"><span class="pip" data-ic="quiz"></span><span class="lbl">Quiz</span></button>
+      <button class="tab" role="tab" data-act="tab" data-tab="badges"><span class="pip" data-ic="medal"></span><span class="lbl">Badges</span></button>
+      <button class="tab" role="tab" data-act="tab" data-tab="challenges"><span class="pip" data-ic="leaf"></span><span class="lbl">Challenges</span></button>
+      <button class="tab" role="tab" data-act="tab" data-tab="leaderboard"><span class="pip" data-ic="podium"></span><span class="lbl">Leaderboard</span></button>
+    </nav>
+    <div id="sheet"></div>
+    <div id="modal"></div>
+    <canvas id="confetti" aria-hidden="true"></canvas>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+function $(s, r){ return (r||document).querySelector(s); }
+function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+/* ---------- icons ---------- */
+var ICONS = {
+  sprout:'<path d="M12 21v-8"/><path d="M12 13c0-4.2-2.8-6.5-7-6.5 0 4.2 2.8 6.5 7 6.5z"/><path d="M12 15c0-4.2 2.8-6.5 7-6.5 0 4.2-2.8 6.5-7 6.5z"/>',
+  flame:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-3.8 2.5-5 .3 1.5 1 2.5 2 3 .3-3 .5-5.5.5-8z"/>',
+  star:'<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  learn:'<path d="M3 5.5c3-1.5 6-1.5 9 .5 3-2 6-2 9-.5V19c-3-1.5-6-1.5-9 .5-3-2-6-2-9-.5z"/><path d="M12 6v13.5"/>',
+  quiz:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .9-1 1.6v.5"/><path d="M12 17.2v.1"/>',
+  medal:'<circle cx="12" cy="14.5" r="6"/><path d="M8.6 9.5 6 3h4l2 4.2L14 3h4l-2.6 6.5"/><path d="m12 11.8.9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z"/>',
+  leaf:'<path d="M5 20c-.5-8.5 4.5-15 15-15 .5 10.5-6 15.5-14 15"/><path d="M5 20c3-4.5 6.5-7.5 10-9"/>',
+  podium:'<path d="M3 20.5h18"/><path d="M4.5 20.5v-6h5v6M9.5 20.5V9h5v11.5M14.5 20.5v-8.5h5v8.5"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  chev:'<path d="m9 6 6 6-6 6"/>',
+  back:'<path d="m15 6-6 6 6 6"/>',
+  bottle:'<path d="M10 3h4v3l1.5 2.5V20a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1V8.5L10 6z"/><path d="M8.5 12.5h7"/>',
+  bulb:'<path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.2 1.1 2V16h5v-.2c0-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>',
+  bus:'<rect x="5" y="3" width="14" height="15" rx="2.5"/><path d="M5 11h14M8 18v3M16 18v3"/><path d="M8.5 14.5h.01M15.5 14.5h.01"/>',
+  recycle:'<path d="M7.5 19H4.6a1.5 1.5 0 0 1-1.3-2.2l2.4-4"/><path d="M9 8.3l1.7-3a1.5 1.5 0 0 1 2.6 0l2.2 3.8"/><path d="M18.2 13l1.5 2.6a1.5 1.5 0 0 1-1.3 2.3H12"/><path d="m14 15.6-2.2 2.4 2.2 2.4"/><path d="m2.9 10.6 2.8 2.2 2.7-1.9"/><path d="m12.3 9.6 3.2-.5.2-3.3"/>',
+  plate:'<circle cx="13.5" cy="12" r="7"/><circle cx="13.5" cy="12" r="3.3"/><path d="M3.5 4v16"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  compass:'<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4.5v1A3.5 3.5 0 0 0 8 10.5M16 6h3.5v1a3.5 3.5 0 0 1-3.5 3.5M12 13v4M8.5 21h7l-.6-4H9.1z"/>',
+  crown:'<path d="M4 18 3 8l5 4 4-6 4 6 5-4-1 10z"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  shuffle:'<path d="M3 7h3.5c2 0 3.1 1 4.2 2.7l2.6 4.6c1.1 1.7 2.2 2.7 4.2 2.7H21"/><path d="M3 17h3.5c1.4 0 2.4-.5 3.2-1.4M14.3 8.4c.8-.9 1.8-1.4 3.2-1.4H21"/><path d="m18.5 4.5 2.5 2.5-2.5 2.5M18.5 14.5l2.5 2.5-2.5 2.5"/>'
+};
+function ic(n){ return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[n]||"")+'</svg>'; }
+
+/* ---------- content ---------- */
+var UNITS = [
+  { id:"u1", n:1, sdg:17, color:"#19486A", goal:"Partnerships for the Goals", title:"The 17 Goals", short:"What the SDGs are and why they matter",
+    cards:[
+      {t:"17 goals, one shared plan", b:"In September 2015, all 193 UN member states adopted the 2030 Agenda for Sustainable Development. At its heart are 17 Sustainable Development Goals, the SDGs.", f:"The goals apply to every country, rich or poor, not only developing ones."},
+      {t:"169 targets to track", b:"Each goal breaks down into smaller targets with indicators, so progress can be measured. Across all 17 goals there are 169 targets.", f:"Target numbers work like addresses: 12.5 means Goal 12, target 5."},
+      {t:"The five Ps", b:"The goals are often grouped into five themes: People, Planet, Prosperity, Peace and Partnership.", f:"Goal 17, Partnerships for the Goals, is about working together to reach the other 16."},
+      {t:"Where you come in", b:"Governments set policy, but daily choices add up too: what you buy, how you get to class and what ends up in the bin.", f:"EcoLingo’s weekly challenges turn these choices into small habits you can track."}
+    ],
+    quiz:[
+      {q:"How many Sustainable Development Goals are there?", o:["12","15","17","20"], a:2, why:"There are 17 SDGs, adopted together in 2015."},
+      {q:"In which year did UN member states adopt the SDGs?", o:["2000","2010","2015","2020"], a:2, why:"The 2030 Agenda and its 17 goals were adopted in September 2015. The Millennium Development Goals came before them, in 2000."},
+      {q:"By which year are most SDG targets meant to be reached?", o:["2025","2030","2040","2050"], a:1, why:"The goals belong to the 2030 Agenda, so most targets aim for 2030."},
+      {q:"How many targets sit under the 17 goals?", o:["17","51","169","300"], a:2, why:"The 17 goals contain 169 targets in total."},
+      {q:"Which of these is NOT one of the five Ps?", o:["People","Planet","Profit","Peace"], a:2, why:"The five Ps are People, Planet, Prosperity, Peace and Partnership. Profit is not one of them."}
+    ]},
+  { id:"u2", n:2, sdg:4, color:"#C5192D", goal:"Quality Education", title:"Learning for change", short:"SDG 4 and target 4.7, education for sustainable development",
+    cards:[
+      {t:"Goal 4: Quality Education", b:"SDG 4 aims for inclusive, fair and good-quality education, and lifelong learning opportunities for everyone.", f:"It covers more than schools: universities, skills training and adult learning count too."},
+      {t:"Target 4.7", b:"By 2030, every learner should gain the knowledge and skills needed to promote sustainable development, including sustainable lifestyles, human rights and global citizenship.", f:"This idea is called Education for Sustainable Development, or ESD."},
+      {t:"Knowing is not yet doing", b:"Many people care about the environment but still find it hard to change habits. Short, regular practice helps a new habit stick better than one long talk.", f:"That is why each EcoLingo lesson takes about two minutes."},
+      {t:"Pass it on", b:"People tend to copy what their friends do. Sharing a habit with your roommate or study group spreads it further than doing it alone.", f:"The leaderboard is a small nudge to learn alongside your coursemates."}
+    ],
+    quiz:[
+      {q:"What is SDG 4 about?", o:["Clean water","Quality education","Climate action","Zero hunger"], a:1, why:"SDG 4 is Quality Education: inclusive, fair education and lifelong learning for all."},
+      {q:"Target 4.7 wants every learner to gain the skills to…", o:["Get higher grades","Promote sustainable development","Learn a second language","Use more technology"], a:1, why:"Target 4.7 is about the knowledge and skills needed to promote sustainable development."},
+      {q:"What does ESD stand for?", o:["Education for Sustainable Development","Energy Saving Design","Environmental Science Degree","Earth Systems Data"], a:0, why:"ESD means Education for Sustainable Development, the idea behind target 4.7."},
+      {q:"Which approach helps a new habit stick best?", o:["One long lecture a semester","Short, regular practice","Reading a 50-page report","Waiting for a new rule"], a:1, why:"Short, repeated practice helps new habits stick."},
+      {q:"Which of these is named in target 4.7?", o:["Global citizenship","Building highways","Stock trading","Space travel"], a:0, why:"Target 4.7 names sustainable lifestyles, human rights, gender equality and global citizenship, among others."}
+    ]},
+  { id:"u3", n:3, sdg:12, color:"#BF8B2E", goal:"Responsible Consumption and Production", title:"Use less, waste less", short:"SDG 12, responsible consumption and production",
+    cards:[
+      {t:"Goal 12", b:"SDG 12 is Responsible Consumption and Production: getting more out of what we make and use, while creating less waste and pollution.", f:"It looks at both sides, how things are made and how we use them."},
+      {t:"Target 12.5", b:"By 2030, substantially reduce waste generation through prevention, reduction, recycling and reuse.", f:"Notice the order: preventing waste comes before recycling it."},
+      {t:"The waste hierarchy", b:"Best is to refuse and reduce. Next, reuse and repair. Then recycle. Throwing away comes last. Recycling still uses energy, so avoiding waste wins.", f:"A refilled bottle beats a recycled one."},
+      {t:"Target 12.3: food waste", b:"By 2030, halve global food waste per person at the retail and consumer level, and reduce food losses along supply chains.", f:"Ordering only what you can finish is one of the easiest wins."}
+    ],
+    quiz:[
+      {q:"What is the full name of SDG 12?", o:["Responsible Consumption and Production","Sustainable Cities and Communities","Life on Land","Industry and Innovation"], a:0, why:"SDG 12 is Responsible Consumption and Production."},
+      {q:"In the waste hierarchy, which option is best?", o:["Recycle","Throw away","Reduce","Burn for energy"], a:2, why:"Reducing or refusing comes first, because that waste never exists."},
+      {q:"Target 12.3 aims to do what to food waste per person by 2030?", o:["Halve it","Cut it by 10%","Double its recycling","Ban it"], a:0, why:"Target 12.3 aims to halve per-person food waste at retail and consumer level."},
+      {q:"Which of these is an example of reuse?", o:["Buying a new plastic bottle","Refilling your own bottle","Putting a can in the recycling bin","Throwing away a broken pen"], a:1, why:"Refilling the same bottle is reuse. Recycling breaks an item down to make something new."},
+      {q:"Target 12.5 reduces waste through prevention, reduction, recycling and…", o:["Reuse","Burning","Exporting","Landfill"], a:0, why:"Target 12.5 names prevention, reduction, recycling and reuse."}
+    ]},
+  { id:"u4", n:4, sdg:13, color:"#3F7E44", goal:"Climate Action", title:"Act on campus", short:"SDG 13, climate action in daily life",
+    cards:[
+      {t:"Goal 13: Climate Action", b:"SDG 13 calls for urgent action to fight climate change and its impacts, from cutting emissions to preparing for floods and heat.", f:"Heavy rain, floods and heatwaves are some of the impacts it asks countries to prepare for."},
+      {t:"Power down", b:"Lights, fans and air-conditioners left running in empty rooms waste electricity. Switching off when you leave is the simplest climate action there is.", f:"Setting the air-con a little warmer also cuts the energy it uses."},
+      {t:"Getting to class", b:"Walking, cycling and shared buses produce far less carbon per trip than driving alone.", f:"For short trips, walking is also the cheapest option."},
+      {t:"Plates and plugs", b:"Plant-based meals usually have a smaller carbon footprint than beef-heavy ones. Old phones and chargers belong in e-waste collection, not the general bin.", f:"E-waste holds metals that can be recovered, and harmful substances that should not reach landfill."}
+    ],
+    quiz:[
+      {q:"What is SDG 13?", o:["Life below water","Climate action","Affordable and clean energy","Good health"], a:1, why:"SDG 13 is Climate Action: urgent action on climate change and its impacts."},
+      {q:"Your class is 1 km away. Which choice has the lowest carbon footprint?", o:["Drive alone","Take an e-hailing car","Walk","Ride a motorbike"], a:2, why:"Walking produces almost no emissions for a short trip."},
+      {q:"You are the last to leave the tutorial room. What should you do?", o:["Leave everything on for the next class","Switch off lights, fans and air-con","Switch off only the projector","Open the windows"], a:1, why:"Switching everything off stops electricity being wasted on an empty room."},
+      {q:"Which meal usually has the smallest carbon footprint?", o:["Beef burger","Lamb curry","Tofu and vegetable rice","Steak"], a:2, why:"Plant-based meals usually have a much smaller footprint than red meat."},
+      {q:"Where should an old phone charger go?", o:["General rubbish bin","E-waste collection point","Paper recycling","Food waste bin"], a:1, why:"Chargers are e-waste. Collection points recover the metals and keep harmful parts out of landfill."}
+    ]}
+];
+var CHALLENGES = [
+  {id:"bottle", t:"Refill, don’t buy", d:"Bring your own bottle or tumbler instead of buying a drink in plastic.", icon:"bottle", sdg:12, color:"#BF8B2E", feat:true},
+  {id:"lights", t:"Lights off, fan off", d:"Switch off lights, fans and air-con when you are the last to leave a room.", icon:"bulb", sdg:13, color:"#3F7E44"},
+  {id:"bus", t:"Walk or take the bus", d:"Get to class on foot, by bike or on the campus bus instead of driving alone.", icon:"bus", sdg:13, color:"#3F7E44"},
+  {id:"sort", t:"Sort it right", d:"Rinse your recyclables and put them in the correct bin.", icon:"recycle", sdg:12, color:"#BF8B2E"},
+  {id:"plate", t:"Clean plate", d:"Order only what you can finish and leave no food behind.", icon:"plate", sdg:12, color:"#BF8B2E"}
+];
+var LEVELS = [{n:"Seedling",p:0},{n:"Sprout",p:100},{n:"Sapling",p:250},{n:"Tree",p:500},{n:"Forest",p:900}];
+var SAMPLE = [
+  {n:"AmirahHijau",w:240,a:1240},{n:"KitarKing",w:205,a:980},{n:"LeafyLin",w:190,a:875},
+  {n:"BotolBuddy",w:160,a:760},{n:"Daun_Dan",w:140,a:640},{n:"SolarSiti",w:120,a:520},
+  {n:"TumblerTeo",w:95,a:410},{n:"RimbaRaj",w:70,a:330},{n:"ZeroWasteZ",w:55,a:260}
+];
+var AVC = ["#19486A","#C5192D","#BF8B2E","#3F7E44","#0A97D9","#DD1367","#FD6925","#4C9F38","#A21942"];
+var COMMUNITY_BASE = 37, COMMUNITY_GOAL = 50;
+
+/* ---------- dates ---------- */
+function pad(n){ return (n<10?"0":"")+n; }
+function dkey(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function today(){ return dkey(new Date()); }
+function daysAgo(n){ var d=new Date(); d.setDate(d.getDate()-n); return dkey(d); }
+function weekDays(){ var d=new Date(); d.setHours(0,0,0,0); var dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); var out=[]; for(var i=0;i<7;i++){ var x=new Date(d); x.setDate(d.getDate()+i); out.push(x); } return out; }
+function fmtDay(d){ return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); }
+
+/* ---------- state ---------- */
+var KEY = "ecolingo-proto-v1";
+function sampleState(){
+  var y=daysAgo(1), y2=daysAgo(2);
+  return { v:1, nick:"EcoRookie", lessons:{u1:true}, quiz:{u1:{best:4,taken:1}},
+    checkins:[{c:"bottle",d:y},{c:"lights",d:y}],
+    log:[{d:y2,n:60},{d:y,n:30}], streak:2, last:y, badges:{sprout:y2, starter:y} };
+}
+function zeroState(nick){ return { v:1, nick:nick||"EcoRookie", lessons:{}, quiz:{}, checkins:[], log:[], streak:0, last:"", badges:{} }; }
+function load(){ try{ var v=JSON.parse(localStorage.getItem(KEY)); return v && v.v===1 ? v : null; }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+var S = load() || sampleState();
+
+function totalPts(){ return S.log.reduce(function(a,b){ return a+b.n; },0); }
+function weekPts(){ var w=dkey(weekDays()[0]); return S.log.filter(function(x){ return x.d>=w; }).reduce(function(a,b){ return a+b.n; },0); }
+function lessonsDone(){ return UNITS.filter(function(u){ return S.lessons[u.id]; }).length; }
+function bestAny(){ var m=0; Object.keys(S.quiz).forEach(function(k){ m=Math.max(m,S.quiz[k].best); }); return m; }
+function unitsQuizzed(){ return UNITS.filter(function(u){ return S.quiz[u.id]; }).length; }
+function curStreak(){ return (S.last===today()||S.last===daysAgo(1)) ? S.streak : 0; }
+function levelIdx(p){ var i=0; LEVELS.forEach(function(l,j){ if(p>=l.p) i=j; }); return i; }
+function initials(n){ var p=String(n).replace(/[^A-Za-z0-9 _]/g,"").split(/[ _]+/).filter(Boolean); if(!p.length) return "?"; if(p.length===1){ var m=p[0].match(/[A-Z]/g); return (m&&m.length>1? m[0]+m[1] : p[0].slice(0,2)).toUpperCase(); } return (p[0][0]+p[1][0]).toUpperCase(); }
+function avColor(n){ var h=0; for(var i=0;i<n.length;i++) h=(h*31+n.charCodeAt(i))>>>0; return AVC[h%AVC.length]; }
+function checked(id,day){ return S.checkins.some(function(x){ return x.c===id && x.d===day; }); }
+function weekCheckins(){ var w=dkey(weekDays()[0]); return S.checkins.filter(function(x){ return x.d>=w; }).length; }
+function board(mode){
+  var rows = SAMPLE.map(function(s){ return {n:s.n, pts: mode==="week"? s.w : s.a}; });
+  rows.push({n:S.nick, me:true, pts: mode==="week"? weekPts() : totalPts()});
+  rows.sort(function(a,b){ return (b.pts-a.pts) || (a.me?-1:(b.me?1:0)); });
+  return rows;
+}
+function myRank(mode){ var r=board(mode); for(var i=0;i<r.length;i++) if(r[i].me) return i+1; return r.length; }
+function touch(){ var t=today(); if(S.last===t) return; S.streak = (S.last===daysAgo(1)) ? S.streak+1 : 1; S.last=t; }
+
+var BADGES = [
+  {id:"sprout", name:"First Sprout", desc:"Finish your first lesson", icon:"sprout", c:"#3F7E44", prog:function(){ return [lessonsDone(),1]; }},
+  {id:"getter", name:"Goal Getter", desc:"Finish all four lessons", icon:"globe", c:"#19486A", prog:function(){ return [lessonsDone(),4]; }},
+  {id:"ace", name:"Sharp Mind", desc:"Score 5 out of 5 in any quiz", icon:"target", c:"#C5192D", prog:function(){ return [bestAny(),5]; }},
+  {id:"explorer", name:"Quiz Explorer", desc:"Take the quiz for every unit", icon:"compass", c:"#0A97D9", prog:function(){ return [unitsQuizzed(),4]; }},
+  {id:"starter", name:"Action Starter", desc:"Check in your first eco-action", icon:"leaf", c:"#4C9F38", prog:function(){ return [S.checkins.length,1]; }},
+  {id:"habit", name:"Habit Builder", desc:"Reach 10 eco-action check-ins", icon:"recycle", c:"#BF8B2E", prog:function(){ return [S.checkins.length,10]; }},
+  {id:"roll", name:"On a Roll", desc:"Keep a three-day streak", icon:"flame", c:"#FD6925", prog:function(){ return [curStreak(),3]; }},
+  {id:"podium", name:"Top Three", desc:"Reach the top 3 this week", icon:"trophy", c:"#FCC30B", ink:"#2B2100", prog:function(){ return [myRank("week")<=3?1:0,1]; }}
+];
+
+/* ---------- ui state ---------- */
+var TABS = ["learn","quiz","badges","challenges","leaderboard"];
+var tab = "learn", firstPaint = true, justGrew = null;
+var L = null, Q = null, boardMode = "week", badgeQ = [], shownPts = null;
+
+function fillStaticIcons(){
+  $$("[data-ic]").forEach(function(el){ el.innerHTML = ic(el.getAttribute("data-ic")); });
+  $$("[data-icx]").forEach(function(el){ el.insertAdjacentHTML("afterbegin", ic("x")); });
+}
+
+function go(t){
+  if(TABS.indexOf(t)<0) t="learn";
+  tab=t;
+  $$(".tab").forEach(function(b){ b.setAttribute("aria-selected", String(b.dataset.tab===t)); });
+  $$(".about-nav button").forEach(function(b){ b.classList.toggle("on", b.dataset.tab===t); });
+  render();
+  $("#view").scrollTop = 0;
+  try{ history.replaceState(null,"","#"+t); }catch(e){}
+}
+function render(){
+  var f = {learn:renderLearn, quiz:renderQuiz, badges:renderBadges, challenges:renderChallenges, leaderboard:renderBoard}[tab];
+  $("#view").innerHTML = f();
+  if(tab==="learn" && !L) justGrew = null;
+  firstPaint = false;
+}
+function renderHeader(animate){
+  $("#streakN").textContent = curStreak();
+  $("#avatar").textContent = initials(S.nick);
+  var p = totalPts();
+  if(!animate || reduced || shownPts===null){ shownPts=p; $("#ptsN").textContent=p; return; }
+  var from=shownPts, t0=performance.now(), dur=650, el=$("#ptsN"); shownPts=p;
+  (function step(now){ var k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3); el.textContent=Math.round(from+(p-from)*e); if(k<1) requestAnimationFrame(step); })(t0);
+  var pill=$("#ptsPill"); if(pill.animate) pill.animate([{transform:"scale(1)"},{transform:"scale(1.2)"},{transform:"scale(1)"}],{duration:450,easing:"ease-out"});
+}
+function greeting(){ var h=new Date().getHours(); return h<12?"Good morning":(h<18?"Good afternoon":"Good evening"); }
+function toast(msg){ var t=document.createElement("div"); t.className="toast"; t.textContent=msg; $("#app").appendChild(t); setTimeout(function(){ t.remove(); }, 2500); }
+
+/* ---------- points + badges ---------- */
+function award(n, rect){
+  var last = S.log[S.log.length-1], t=today();
+  if(last && last.d===t) last.n += n; else S.log.push({d:t,n:n});
+  touch(); save();
+  if(reduced || !rect){ renderHeader(true); }
+  else floatPts(n, rect, function(){ renderHeader(true); });
+  setTimeout(checkBadges, reduced ? 60 : 950);
+}
+function floatPts(n, rect, done){
+  var app=$("#app"), ar=app.getBoundingClientRect(), pr=$("#ptsPill").getBoundingClientRect();
+  var el=document.createElement("div"); el.className="float-pts"; el.textContent="+"+n; app.appendChild(el);
+  var x0=rect.left+rect.width/2-ar.left, y0=rect.top+rect.height/2-ar.top, x1=pr.left+pr.width/2-ar.left, y1=pr.top+pr.height/2-ar.top;
+  el.style.left=x0+"px"; el.style.top=y0+"px";
+  if(!el.animate){ el.remove(); done(); return; }
+  var a = el.animate([
+    {transform:"translate(-50%,-50%) scale(.5)", opacity:0},
+    {transform:"translate(-50%,-110%) scale(1.25)", opacity:1, offset:.28},
+    {transform:"translate(calc(-50% + "+(x1-x0)+"px), calc(-50% + "+(y1-y0)+"px)) scale(.6)", opacity:.85}
+  ], {duration:950, easing:"cubic-bezier(.3,.7,.2,1)"});
+  a.onfinish = function(){ el.remove(); done(); };
+}
+function checkBadges(){
+  var any=false;
+  BADGES.forEach(function(b){ if(S.badges[b.id]) return; var p=b.prog(); if(p[0]>=p[1]){ S.badges[b.id]=today(); badgeQ.push(b); any=true; } });
+  if(any){ save(); if(!$("#modal").innerHTML) showBadge(); if(tab==="badges") render(); }
+}
+function showBadge(){
+  var b=badgeQ.shift(); if(!b) return;
+  $("#modal").innerHTML = '<div class="modal-wrap"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="bm-t">'+
+    '<div class="emb" style="--bc:'+b.c+';'+(b.ink?'--bi:'+b.ink:'')+'">'+ic(b.icon)+'</div>'+
+    '<p class="eyebrow">Badge unlocked</p><h2 id="bm-t">'+b.name+'</h2><p>'+b.desc+'</p>'+
+    '<button class="btn" data-act="badgeOk">Nice!</button></div></div>';
+  confetti();
+  var btn=$("#modal .btn"); if(btn) btn.focus();
+}
+function confetti(){
+  if(reduced) return;
+  var c=$("#confetti"), r=c.getBoundingClientRect(), dpr=window.devicePixelRatio||1, ctx=c.getContext("2d");
+  c.width=r.width*dpr; c.height=r.height*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  var cols=["#C5192D","#BF8B2E","#3F7E44","#19486A","#FCC30B","#0A97D9","#FD6925","#DD1367"];
+  var P=[]; for(var i=0;i<140;i++) P.push({x:r.width/2, y:r.height*.42, vx:(Math.random()-.5)*11, vy:-Math.random()*11-3, s:5+Math.random()*6, rot:Math.random()*6, vr:(Math.random()-.5)*.35, c:cols[i%cols.length]});
+  var f=0;
+  (function step(){
+    ctx.clearRect(0,0,r.width,r.height); f++;
+    P.forEach(function(p){ p.vy+=.3; p.vx*=.985; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha=Math.max(0,1-f/150); ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); ctx.restore(); });
+    if(f<150) requestAnimationFrame(step); else ctx.clearRect(0,0,r.width,r.height);
+  })();
+}
+
+/* ---------- LEARN ---------- */
+function plantSVG(){
+  var done=lessonsDone();
+  var spots=[{x:60,y:132,r:-18,f:false},{x:59,y:110,r:-24,f:true},{x:61,y:86,r:-28,f:false},{x:59.5,y:62,r:-30,f:true}];
+  var leaf="M0 0 C7 -13 27 -15 38 -6 C29 5 12 8 0 0Z", vein="M3 -1 C13 -5 23 -7 33 -6";
+  var leaves = spots.map(function(s,i){
+    var u=UNITS[i], on=!!S.lessons[u.id], pop=(justGrew===u.id)||(firstPaint&&on);
+    var tr="translate("+s.x+" "+s.y+")"+(s.f?" scale(-1 1)":"")+" rotate("+s.r+")";
+    return '<g transform="'+tr+'"><path class="leaf '+(on?"on":"off")+(pop?" pop":"")+'" d="'+leaf+'" style="--c:'+u.color+';--d:'+(firstPaint?(0.5+i*0.15):0.1)+'s"/>'+(on?'<path class="vein" d="'+vein+'"/>':'')+'</g>';
+  }).join("");
+  var top = done===4
+    ? '<g class="bloom">'+UNITS.map(function(u,i){ var a=i*90+45; return '<ellipse cx="60" cy="18" rx="6" ry="10" fill="'+u.color+'" transform="rotate('+a+' 60 28)"/>'; }).join("")+'<circle cx="60" cy="28" r="5.5" fill="#FCC30B"/></g>'
+    : '<ellipse cx="60" cy="30" rx="4.5" ry="7" fill="var(--stem)"/>';
+  return '<svg class="plant" viewBox="0 0 120 170" role="img" aria-label="SDG plant with '+done+' of 4 leaves">'+
+    '<ellipse cx="60" cy="160" rx="42" ry="7" fill="var(--soil)"/>'+
+    '<path class="stem'+(firstPaint?" draw":"")+'" pathLength="1" d="M60 158 C58 134 64 114 59.5 94 S57.5 56 60 34" fill="none" stroke="var(--stem)" stroke-width="4" stroke-linecap="round"/>'+
+    leaves + top + '</svg>';
+}
+function renderLearn(){
+  var done=lessonsDone(), next=null;
+  for(var i=0;i<UNITS.length;i++) if(!S.lessons[UNITS[i].id]){ next=UNITS[i]; break; }
+  var rows = UNITS.map(function(u){
+    var ld=!!S.lessons[u.id], q=S.quiz[u.id], isNext=next&&next.id===u.id;
+    var status = ld ? '<span class="status done">'+ic("check")+'Lesson done'+(q?' · Quiz best '+q.best+'/5':' · Quiz not taken')+'</span>'
+                    : '<span class="status">4 cards · about 2 min</span>';
+    var end = ld ? '<span class="ok-dot">'+ic("check")+'</span>' : (isNext ? '<span class="chip next">Start</span>' : ic("chev"));
+    return '<button class="unit'+(ld?" is-done":"")+(isNext?" is-next":"")+'" data-act="lesson" data-u="'+u.id+'" style="--unit:'+u.color+'">'+
+      '<span class="sdg-tile"><small>SDG</small><b>'+u.sdg+'</b></span>'+
+      '<span class="unit-main"><span class="eyebrow">Unit '+u.n+'</span><span class="unit-title">'+u.title+'</span><span class="unit-sub">'+u.short+'</span>'+status+'</span>'+
+      '<span class="unit-end">'+end+'</span></button>';
+  }).join("");
+  var cta = next
+    ? '<button class="btn sm" data-act="lesson" data-u="'+next.id+'">'+(done?"Continue":"Start")+': Unit '+next.n+ic("chev")+'</button>'
+    : '<span class="chip good">'+ic("check")+'All four units done</span>';
+  return '<section class="screen">'+
+    '<div class="head"><p class="eyebrow">'+greeting()+', '+esc(S.nick)+'</p><h1 class="h1">Grow your SDG plant</h1></div>'+
+    '<div class="grow card">'+plantSVG()+'<div class="grow-text"><p class="eyebrow">Your plant</p><p class="grow-big">'+done+' <span>of 4 leaves</span></p><p class="muted">Each lesson you finish grows a leaf in that goal’s colour.</p>'+cta+'</div></div>'+
+    '<div class="sec-head"><h2 class="h2">Learning path</h2><span class="muted smt">4 units · 16 cards · 20 questions</span></div>'+
+    '<div class="units">'+rows+'</div></section>';
+}
+function openLesson(id){
+  var u=null; UNITS.forEach(function(x){ if(x.id===id) u=x; });
+  L={u:u, i:0, done:false, dir:0, gained:0, fresh:true};
+  drawLesson();
+}
+function drawLesson(){
+  var u=L.u, n=u.cards.length, inner;
+  var segs = u.cards.map(function(_,j){ return '<span class="'+((j<L.i||L.done)?"on":(j===L.i?"cur":""))+'"></span>'; }).join("");
+  if(!L.done){
+    var c=u.cards[L.i];
+    inner = '<div class="lesson-scroll"><div class="lesson-head"><span class="sdg-tile sm"><small>SDG</small><b>'+u.sdg+'</b></span><div><p class="eyebrow">Unit '+u.n+' · '+u.goal+'</p><p class="lesson-unit">'+u.title+'</p></div></div>'+
+      '<article class="lesson-card '+(L.dir>0?"slide-r":(L.dir<0?"slide-l":""))+'"><span class="card-num" aria-hidden="true">'+pad(L.i+1)+'</span><h2>'+c.t+'</h2><p>'+c.b+'</p>'+
+      '<div class="fact">'+ic("bulb")+'<div><b>Did you know?</b><p>'+c.f+'</p></div></div></article></div>'+
+      '<div class="sheet-foot"><button class="btn ghost" data-act="lessonPrev" '+(L.i===0?"disabled":"")+'>'+ic("back")+'Back</button>'+
+      '<button class="btn" data-act="lessonNext">'+(L.i===n-1?"Finish lesson":"Next")+ic(L.i===n-1?"check":"arrow")+'</button></div>';
+  } else {
+    inner = '<div class="lesson-done"><div class="done-burst">'+ic("check")+'</div><h2>Unit '+u.n+' complete</h2>'+
+      '<p class="muted">'+(L.gained?'+20 points and a new '+u.title.toLowerCase().replace(/^the /,"")+' leaf on your plant.':'You already grew this leaf. Nice refresher.')+'</p>'+
+      '<div class="done-actions"><button class="btn" data-act="quizFromLesson">Take the Unit '+u.n+' quiz'+ic("arrow")+'</button><button class="btn ghost" data-act="closeLesson">Back to my plant</button></div></div>';
+  }
+  $("#sheet").innerHTML = '<div class="sheet'+(L.fresh?" enter":"")+'" role="dialog" aria-modal="true" aria-label="Unit '+u.n+' lesson" style="--unit:'+u.color+'">'+
+    '<div class="sheet-top"><button class="icon-btn" data-act="closeLesson" aria-label="Close lesson">'+ic("x")+'</button><div class="segs">'+segs+'</div><span class="q-count">'+(L.done?n:L.i+1)+'/'+n+'</span></div>'+inner+'</div>';
+  L.fresh=false;
+}
+function finishLesson(btn){
+  var rect=btn.getBoundingClientRect();
+  L.done=true;
+  if(!S.lessons[L.u.id]){ S.lessons[L.u.id]=true; justGrew=L.u.id; L.gained=20; drawLesson(); award(20, rect); }
+  else drawLesson();
+  if(!reduced) confettiLight();
+}
+function confettiLight(){ /* small celebration reuses the main burst */ confetti(); }
+function closeLesson(){ L=null; $("#sheet").innerHTML=""; if(tab==="learn") render(); }
+
+/* ---------- QUIZ ---------- */
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function startQuiz(id){
+  var items=[];
+  if(id==="mix"){ UNITS.forEach(function(u){ u.quiz.forEach(function(q){ items.push({q:q.q,o:q.o,a:q.a,why:q.why,u:u}); }); }); items=shuffle(items).slice(0,5); }
+  else { UNITS.forEach(function(u){ if(u.id===id) u.quiz.forEach(function(q){ items.push({q:q.q,o:q.o,a:q.a,why:q.why,u:u}); }); }); }
+  items = items.map(function(q){ var idx=shuffle([0,1,2,3]); return {q:q.q, o:idx.map(function(i){ return q.o[i]; }), a:idx.indexOf(q.a), why:q.why, u:q.u}; });
+  Q={id:id, items:items, i:0, picked:null, res:[], earned:0, done:false};
+  if(tab!=="quiz") go("quiz"); else { render(); $("#view").scrollTop=0; }
+}
+function renderQuiz(){
+  if(Q && Q.done) return quizResult();
+  if(Q) return quizQuestion();
+  var rows = UNITS.map(function(u){
+    var q=S.quiz[u.id], bars="";
+    for(var k=0;k<5;k++) bars+='<i class="'+(q&&k<q.best?"on":"")+'"></i>';
+    return '<button class="qrow" data-act="startQuiz" data-q="'+u.id+'" style="--unit:'+u.color+'">'+
+      '<span class="sdg-tile sm"><small>SDG</small><b>'+u.sdg+'</b></span>'+
+      '<span><span class="t" style="display:block">Unit '+u.n+': '+u.title+'</span><span class="s" style="display:block">'+(q?'Best '+q.best+'/5 · taken '+q.taken+(q.taken===1?' time':' times'):'5 questions · not taken yet')+'</span><span class="best" aria-hidden="true">'+bars+'</span></span>'+
+      '<span class="unit-end">'+ic("chev")+'</span></button>';
+  }).join("");
+  var art = UNITS.map(function(u){ return '<span style="background:'+u.color+'">'+u.sdg+'</span>'; }).join("");
+  return '<section class="screen">'+
+    '<div class="head"><p class="eyebrow">Quiz</p><h1 class="h1">Test what you know</h1></div>'+
+    '<div class="mix"><div><p class="eyebrow">Daily mix</p><h2>5 random questions from all four units</h2><p>A quick round to keep the facts fresh.</p><button class="btn" data-act="startQuiz" data-q="mix">'+ic("shuffle")+'Start the mix</button></div><div class="mix-art" aria-hidden="true">'+art+'</div></div>'+
+    '<div class="rules"><div class="rule"><b>+10</b><span>each correct answer</span></div><div class="rule"><b>+10</b><span>bonus for a perfect 5/5</span></div><div class="rule"><b>+20</b><span>each lesson finished</span></div></div>'+
+    '<div class="sec-head"><h2 class="h2">Unit quizzes</h2><span class="muted smt">20 questions in total</span></div>'+
+    '<div class="units">'+rows+'</div></section>';
+}
+function quizQuestion(){
+  var it=Q.items[Q.i], n=Q.items.length, picked=Q.picked;
+  var segs=""; for(var k=0;k<n;k++){ var cls = k<Q.res.length ? (Q.res[k]?"ok":"no") : (k===Q.i?"cur":""); segs+='<span class="'+cls+'"></span>'; }
+  var opts = it.o.map(function(o,i){
+    var cls="";
+    if(picked!==null){ if(i===it.a) cls=" correct"; else if(i===picked) cls=" wrong"; else cls=" dim"; }
+    return '<button class="opt'+cls+'" data-act="pick" data-i="'+i+'" '+(picked!==null?"disabled":"")+'><span class="k">'+"ABCD"[i]+'</span><span>'+o+'</span><span class="mk">'+ic(i===it.a?"check":"x")+'</span></button>';
+  }).join("");
+  var fb="";
+  if(picked!==null){
+    var ok=picked===it.a;
+    fb = '<div class="feedback '+(ok?"ok":"no")+'" role="status"><div class="fb-h">'+ic(ok?"check":"x")+(ok?"Correct · +10 points":"Not quite")+'</div><p>'+it.why+'</p>'+
+      '<button class="btn block" data-act="nextQ">'+(Q.i===n-1?"See my score":"Next question")+ic("arrow")+'</button></div>';
+  }
+  return '<section class="screen" style="--unit:'+it.u.color+'">'+
+    '<div class="q-top"><button class="icon-btn" data-act="quitQuiz" aria-label="Quit quiz">'+ic("x")+'</button><div class="segs">'+segs+'</div><span class="q-count">'+(Q.i+1)+'/'+n+'</span></div>'+
+    '<div class="q-card"><span class="unit-chip"><span>'+it.u.sdg+'</span>Unit '+it.u.n+' · '+it.u.title+'</span><h2 class="q-text">'+it.q+'</h2></div>'+
+    '<div class="opts">'+opts+'</div>'+fb+'</section>';
+}
+function quizResult(){
+  var n=Q.items.length, sc=Q.res.filter(Boolean).length, pct=Math.round(sc/n*100);
+  var unit = Q.id==="mix" ? null : Q.items[0].u;
+  var color = unit ? unit.color : "var(--accent)";
+  var head = sc===n ? "Perfect score!" : (sc>=3 ? "Nicely done" : "Keep growing");
+  var sub = sc===n ? "Every answer right. That earns a 10-point bonus." : (sc>=3 ? "Review the ones you missed and try again for 5/5." : "Read the lesson again, then have another go.");
+  var recap = Q.items.map(function(it,i){ return '<li class="'+(Q.res[i]?"y":"n")+'">'+ic(Q.res[i]?"check":"x")+'<span>'+it.q+'</span></li>'; }).join("");
+  var lessonBtn = (unit && !S.lessons[unit.id]) ? '<button class="btn ghost" data-act="lesson" data-u="'+unit.id+'">Read the Unit '+unit.n+' lesson</button>' : '';
+  return '<section class="screen result" style="--unit:'+color+'">'+
+    '<p class="eyebrow">'+(unit?'Unit '+unit.n+' quiz':'Daily mix')+'</p>'+
+    '<div class="ring" id="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50" pathLength="100" stroke-dasharray="'+pct+' 100"/></svg>'+
+    '<div class="ring-c"><b>'+sc+'/'+n+'</b><span>correct</span></div></div>'+
+    '<h1 class="h1">'+head+'</h1><p class="muted">'+sub+'</p>'+
+    '<div class="chips"><span class="chip sun">'+ic("star")+'+'+Q.earned+' points</span>'+(unit&&S.quiz[unit.id]?'<span class="chip">Best '+S.quiz[unit.id].best+'/5</span>':'')+'</div>'+
+    '<div class="recap"><ul>'+recap+'</ul></div>'+
+    '<div class="acts"><button class="btn" data-act="startQuiz" data-q="'+Q.id+'">Try again</button>'+lessonBtn+'<button class="btn ghost" data-act="quizHome">All quizzes</button></div></section>';
+}
+function pick(i, btn){
+  if(!Q || Q.picked!==null) return;
+  var it=Q.items[Q.i], ok=i===it.a, rect=btn.getBoundingClientRect();
+  Q.picked=i; Q.res.push(ok);
+  render();
+  var nb=$('.opt[data-i="'+i+'"]'); if(nb) nb.classList.add(ok?"pulse":"shake");
+  if(ok){ Q.earned+=10; award(10, rect); }
+  var fb=$(".feedback"); if(fb && fb.scrollIntoView) fb.scrollIntoView({block:"nearest", behavior: reduced?"auto":"smooth"});
+}
+function nextQ(){
+  Q.i++; Q.picked=null;
+  if(Q.i>=Q.items.length){
+    Q.done=true;
+    var sc=Q.res.filter(Boolean).length, n=Q.items.length, prev=S.quiz[Q.id];
+    S.quiz[Q.id]={best:Math.max(prev?prev.best:0, sc), taken:(prev?prev.taken:0)+1};
+    var perfect = sc===n; if(perfect) Q.earned+=10;
+    save(); render(); $("#view").scrollTop=0;
+    if(perfect){ var r=$("#ring"); award(10, r ? r.getBoundingClientRect() : null); }
+    else { touch(); save(); renderHeader(false); setTimeout(checkBadges, 300); }
+  } else { render(); $("#view").scrollTop=0; }
+}
+
+/* ---------- BADGES ---------- */
+function renderBadges(){
+  var p=totalPts(), li=levelIdx(p), cur=LEVELS[li], nx=LEVELS[li+1];
+  var w = nx ? (p-cur.p)/(nx.p-cur.p) : 1;
+  var ladder = LEVELS.map(function(l,i){ return '<div class="rung'+(i<=li?" on":"")+(i===li?" cur":"")+'"><span class="n"></span>'+l.n+'</div>'; }).join("");
+  var earned=0;
+  var cards = BADGES.map(function(b,i){
+    var got=!!S.badges[b.id]; if(got) earned++;
+    var pr=b.prog(), c=Math.min(pr[0],pr[1]);
+    var foot = got ? '<span class="earned-on">'+ic("check")+'Earned '+fmtDay(new Date(S.badges[b.id]+"T00:00:00"))+'</span>'
+                   : '<span class="mini"><span class="track"><i style="--w:'+Math.round(c/pr[1]*100)+'%"></i></span>'+c+' / '+pr[1]+'</span>';
+    return '<div class="badge '+(got?"earned":"locked")+'" style="--d:'+(i*0.45)+'s"><span class="emb" style="--bc:'+b.c+';'+(b.ink?'--bi:'+b.ink:'')+'">'+ic(b.icon)+(got?'':'<span class="lk">'+ic("lock")+'</span>')+'</span>'+
+      '<div><h3>'+b.name+'</h3><p>'+b.desc+'</p></div>'+foot+'</div>';
+  }).join("");
+  return '<section class="screen">'+
+    '<div class="head"><p class="eyebrow">Points and badges</p><h1 class="h1">Your progress</h1></div>'+
+    '<div class="level"><div class="lv-top"><div><p class="eyebrow">Total points</p><div class="lv-big">'+p+'<span>pts</span></div></div><div class="lv-name"><small>Level '+(li+1)+'</small><b>'+cur.n+'</b></div></div>'+
+    '<div><div class="bar"><i style="--w:'+Math.round(w*100)+'%"></i></div><p class="eyebrow" style="margin-top:8px;letter-spacing:.04em;text-transform:none;font-weight:600">'+(nx?(nx.p-p)+' points to '+nx.n:'Top level reached')+'</p></div>'+
+    '<div class="ladder">'+ladder+'</div></div>'+
+    '<div class="sec-head"><h2 class="h2">Badges</h2><span class="muted smt">'+earned+' of '+BADGES.length+' earned</span></div>'+
+    '<div class="bgrid">'+cards+'</div>'+
+    '<div class="sec-head"><h2 class="h2">How to earn points</h2></div>'+
+    '<div class="rules"><div class="rule"><b>+20</b><span>finish a lesson</span></div><div class="rule"><b>+10</b><span>correct answer</span></div><div class="rule"><b>+15</b><span>eco-action check-in</span></div></div></section>';
+}
+
+/* ---------- CHALLENGES ---------- */
+function renderChallenges(){
+  var days=weekDays(), t=today(), wc=weekCheckins();
+  var doneToday = CHALLENGES.filter(function(c){ return checked(c.id,t); }).length;
+  var comm = COMMUNITY_BASE + wc, cw = Math.min(100, Math.round(comm/COMMUNITY_GOAL*100));
+  var list = CHALLENGES.map(function(c){
+    var dn=checked(c.id,t), pts=15+(c.feat?5:0);
+    var dots = days.map(function(d,k){ var key=dkey(d); return '<span class="dot'+(checked(c.id,key)?" on":"")+(key===t?" today":"")+(key>t?" future":"")+'" title="'+d.toLocaleDateString("en-GB",{weekday:"long"})+'">'+"MTWTFSS"[k]+'</span>'; }).join("");
+    return '<article class="chal'+(c.feat?" feat":"")+'" data-c="'+c.id+'" style="--c:'+c.color+'">'+
+      '<span class="chal-ico">'+ic(c.icon)+'</span><div style="min-width:0">'+
+      '<div class="chal-top"><div><h3>'+c.t+'</h3><p class="tag'+(c.feat?" spot":"")+'">'+(c.feat?"Spotlight this week · SDG "+c.sdg:"SDG "+c.sdg)+'</p></div><span class="chip sun">'+ic("star")+'+'+pts+'</span></div>'+
+      '<p>'+c.d+'</p>'+
+      '<div class="chal-foot"><div class="week" aria-label="Check-ins this week">'+dots+'</div>'+
+      (dn ? '<button class="btn sm is-done" disabled>'+ic("check")+'Done today</button>' : '<button class="btn sm" data-act="checkin" data-c="'+c.id+'">I did this today</button>')+
+      '</div></div><span class="stamp" aria-hidden="true">'+ic("check")+'</span></article>';
+  }).join("");
+  return '<section class="screen">'+
+    '<div class="head"><p class="eyebrow">Eco-action challenges</p><h1 class="h1">Small actions, every week</h1></div>'+
+    '<div class="wk"><p class="eyebrow">This week · '+fmtDay(days[0])+' to '+fmtDay(days[6])+'</p>'+
+    '<div class="wk-stats"><div class="wk-stat"><b>'+wc+'</b><span>your check-ins this week</span></div><div class="wk-stat"><b>'+doneToday+'/5</b><span>actions done today</span></div></div>'+
+    '<div class="goal"><div class="goal-l"><span>All testers this week (sample)</span><b>'+comm+' / '+COMMUNITY_GOAL+'</b></div><div class="bar"><i style="--w:'+cw+'%"></i></div></div></div>'+
+    '<div class="chals">'+list+'</div>'+
+    '<p class="fine">Check in once per action per day. EcoLingo trusts you, there is no photo proof.</p></section>';
+}
+function checkin(id, btn){
+  var t=today(); if(checked(id,t)) return;
+  var c=null; CHALLENGES.forEach(function(x){ if(x.id===id) c=x; });
+  var rect=btn.getBoundingClientRect();
+  S.checkins.push({c:id,d:t});
+  award(15+(c&&c.feat?5:0), rect);
+  render();
+  var card=$('.chal[data-c="'+id+'"]'); if(card) card.classList.add("stamped");
+}
+
+/* ---------- LEADERBOARD ---------- */
+function renderBoard(){
+  var rows=board(boardMode), me=0; rows.forEach(function(r,i){ if(r.me) me=i; });
+  var pod=[1,0,2].map(function(k){ var r=rows[k];
+    return '<div class="pod p'+(k+1)+(r.me?" me":"")+'"><span class="crown">'+(k===0?ic("crown"):"")+'</span><span class="av lg" style="--av:'+avColor(r.n)+'">'+initials(r.n)+'</span>'+
+      '<span class="pod-name">'+esc(r.n)+'</span>'+(r.me?'<span class="you">You</span>':'<span class="pod-pts">'+r.pts+' pts</span>')+'<div class="pod-block">'+(k+1)+'</div></div>'; }).join("");
+  var list = rows.slice(3).map(function(r,i){
+    return '<div class="row'+(r.me?" me":"")+'" style="--k:'+i+'"><span class="rk">'+(i+4)+'</span><span class="av" style="--av:'+avColor(r.n)+'">'+initials(r.n)+'</span>'+
+      '<span class="nm">'+esc(r.n)+(r.me?' <span class="you">· You</span>':'')+'</span><span class="pt">'+r.pts+' <small>pts</small></span></div>'; }).join("");
+  var msg;
+  if(me===0) msg="You are leading. Keep the streak going.";
+  else { var ahead=rows[me-1]; msg=(ahead.pts-rows[me].pts+1)+" points to pass "+esc(ahead.n)+"."; }
+  return '<section class="screen">'+
+    '<div class="head"><p class="eyebrow">Leaderboard</p><h1 class="h1">'+(boardMode==="week"?"This week":"All time")+'</h1></div>'+
+    '<div class="seg" role="group" aria-label="Leaderboard period"><button data-act="board" data-m="week" aria-pressed="'+(boardMode==="week")+'">This week</button><button data-act="board" data-m="all" aria-pressed="'+(boardMode==="all")+'">All time</button></div>'+
+    '<div class="me-card"><b>#'+(me+1)+'</b><p><strong>'+esc(S.nick)+'</strong> · '+rows[me].pts+' pts<br><span class="muted">'+msg+'</span></p></div>'+
+    '<div class="podium">'+pod+'</div>'+
+    '<div class="rows">'+list+'</div>'+
+    '<p class="fine">Other players are sample nicknames for this prototype. Points are for fun and carry no real prizes.</p></section>';
+}
+
+/* ---------- profile ---------- */
+function openProfile(){
+  $("#sheet").innerHTML = '<div class="scrim" data-act="closeSheet"></div><div class="bsheet" role="dialog" aria-modal="true" aria-labelledby="pf-t">'+
+    '<div class="grabber"></div><h2 id="pf-t" class="h2">Your nickname</h2>'+
+    '<p class="note">EcoLingo only asks for a nickname. No account, no login, and your progress stays in this browser.</p>'+
+    '<form id="nickForm" class="nick-row"><label class="sr" for="nick">Nickname</label><input id="nick" maxlength="16" autocomplete="off" value="'+esc(S.nick)+'"><button class="btn" type="submit">Save</button></form>'+
+    '<div class="divider"></div><p class="eyebrow">Prototype controls</p>'+
+    '<div class="ctl-row"><button class="btn ghost" data-act="reset" data-mode="sample">Load sample progress</button><button class="btn ghost" data-act="reset" data-mode="zero">Start from zero</button></div>'+
+    '<p class="note" id="resetNote">Use these to reset the demo before a test session.</p></div>';
+}
+function closeSheet(){ $("#sheet").innerHTML=""; L=null; }
+
+/* ---------- events ---------- */
+var ACT = {
+  tab:function(el){ if(L) closeLesson(); go(el.dataset.tab); },
+  lesson:function(el){ openLesson(el.dataset.u); },
+  lessonNext:function(el){ if(L.i<L.u.cards.length-1){ L.i++; L.dir=1; drawLesson(); } else finishLesson(el); },
+  lessonPrev:function(){ if(L.i>0){ L.i--; L.dir=-1; drawLesson(); } },
+  closeLesson:function(){ closeLesson(); },
+  quizFromLesson:function(){ var id=L.u.id; L=null; $("#sheet").innerHTML=""; startQuiz(id); },
+  startQuiz:function(el){ startQuiz(el.dataset.q); },
+  pick:function(el){ pick(+el.dataset.i, el); },
+  nextQ:function(){ nextQ(); },
+  quitQuiz:function(){ Q=null; render(); },
+  quizHome:function(){ Q=null; render(); $("#view").scrollTop=0; },
+  checkin:function(el){ checkin(el.dataset.c, el); },
+  board:function(el){ boardMode=el.dataset.m; render(); },
+  profile:function(){ openProfile(); setTimeout(function(){ var i=$("#nick"); if(i) i.focus(); }, 50); },
+  closeSheet:function(){ closeSheet(); },
+  badgeOk:function(){ $("#modal").innerHTML=""; if(badgeQ.length) setTimeout(showBadge, 150); },
+  reset:function(el){
+    if(el.dataset.armed!=="1"){ $$('[data-act="reset"]').forEach(function(b){ b.dataset.armed="0"; b.textContent = b.dataset.mode==="sample"?"Load sample progress":"Start from zero"; });
+      el.dataset.armed="1"; el.textContent="Tap again to confirm"; $("#resetNote").textContent="This replaces your current points, badges and check-ins."; return; }
+    var nick=S.nick; S = el.dataset.mode==="sample" ? sampleState() : zeroState(nick); S.nick=nick;
+    save(); Q=null; closeSheet(); shownPts=null; renderHeader(false); firstPaint=true; go(tab); toast(el.dataset.mode==="sample"?"Sample progress loaded":"Progress cleared");
+  }
+};
+document.addEventListener("click", function(e){
+  var el=e.target.closest("[data-act]"); if(!el || el.disabled) return;
+  var f=ACT[el.dataset.act]; if(f){ e.preventDefault(); f(el,e); }
+});
+document.addEventListener("submit", function(e){
+  if(e.target.id!=="nickForm") return; e.preventDefault();
+  var v=$("#nick").value.trim().replace(/\s+/g," ").slice(0,16);
+  if(!v){ $("#nick").focus(); return; }
+  S.nick=v; save(); renderHeader(false); closeSheet(); render(); toast("Nickname saved");
+});
+document.addEventListener("keydown", function(e){
+  if(e.key!=="Escape") return;
+  if($("#modal").innerHTML){ ACT.badgeOk(); return; }
+  if($("#sheet").innerHTML){ if(L) closeLesson(); else closeSheet(); }
+});
+
+/* ---------- boot ---------- */
+fillStaticIcons();
+renderHeader(false);
+var h=(location.hash||"").replace("#","");
+go(TABS.indexOf(h)>=0 ? h : "learn");
+setTimeout(checkBadges, 1200);
+})();
+</script>
+
+</body>
+</html>
