@@ -1,0 +1,16 @@
+{
+  "name": "EcoLingo",
+  "short_name": "EcoLingo",
+  "description": "A gamified SDG learning app for UM students: short lessons, quick quizzes and weekly eco-actions.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EEF4EE",
+  "theme_color": "#1C8549",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

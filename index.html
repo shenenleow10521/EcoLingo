@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="EcoLingo: a gamified SDG learning web app for UM students.">
 <title>EcoLingo</title>
+<meta name="theme-color" content="#1C8549">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EcoLingo">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
@@ -370,6 +376,14 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .nick-row input{flex:1;min-width:0;height:46px;padding:0 14px;border-radius:14px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
 .nick-row input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .divider{height:1px;background:var(--line);margin-block:4px}
+.acct{display:flex;flex-direction:column;gap:10px}
+.sync{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.sync.ok::before{background:var(--accent)}
+.sync.bad::before{background:var(--bad)}
+.acct .msg{font-size:13px;color:var(--muted)}
+.acct .msg.err{color:var(--bad)}
+.pod.empty{opacity:.45}
 .ctl-row{display:flex;gap:8px;flex-wrap:wrap}
 .ctl-row .btn{flex:1 1 140px}
 .bsheet .note{font-size:13px;color:var(--muted)}
@@ -431,9 +445,9 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
     <div>
       <p class="eyebrow" style="margin-bottom:8px">Not in this prototype</p>
       <div class="scope">
-        <span class="chip" data-icx>Login or accounts</span>
+        <span class="chip" data-icx data-cloud-hide>Login or accounts</span>
         <span class="chip" data-icx>Native mobile app</span>
-        <span class="chip" data-icx>Cross-device sync</span>
+        <span class="chip" data-icx data-cloud-hide>Cross-device sync</span>
         <span class="chip" data-icx>Languages other than English</span>
         <span class="chip" data-icx>Real prizes</span>
       </div>
@@ -461,6 +475,9 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   </div>
 </div>
 
+<!-- Backend: fill in config.js (see DEPLOY.md). Leave it empty and the app runs offline in this browser only. -->
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
 "use strict";
@@ -582,6 +599,17 @@ function daysAgo(n){ var d=new Date(); d.setDate(d.getDate()-n); return dkey(d);
 function weekDays(){ var d=new Date(); d.setHours(0,0,0,0); var dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); var out=[]; for(var i=0;i<7;i++){ var x=new Date(d); x.setDate(d.getDate()+i); out.push(x); } return out; }
 function fmtDay(d){ return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); }
 
+/* ---------- cloud (Supabase) ---------- */
+var CFG = window.ECOLINGO_CONFIG || {};
+var sb = null;
+try{
+  if(CFG.supabaseUrl && CFG.supabaseKey && window.supabase && window.supabase.createClient)
+    sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:"pkce" } });
+}catch(e){ console.warn("EcoLingo: Supabase client failed", e); }
+/* C.status: local | connecting | syncing | synced | error */
+var C = { on:!!sb, user:null, uid:null, status: sb?"connecting":"local", board:{week:null, all:null}, community:null,
+          t:null, hold:false, otpEmail:"", busy:false, msg:"", msgErr:false };
+
 /* ---------- state ---------- */
 var KEY = "ecolingo-proto-v1";
 function sampleState(){
@@ -592,8 +620,9 @@ function sampleState(){
 }
 function zeroState(nick){ return { v:1, nick:nick||"EcoRookie", lessons:{}, quiz:{}, checkins:[], log:[], streak:0, last:"", badges:{} }; }
 function load(){ try{ var v=JSON.parse(localStorage.getItem(KEY)); return v && v.v===1 ? v : null; }catch(e){ return null; } }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-var S = load() || sampleState();
+function persistLocal(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function save(){ persistLocal(); queueCloudSave(); }
+var S = load() || (C.on ? zeroState() : sampleState());
 
 function totalPts(){ return S.log.reduce(function(a,b){ return a+b.n; },0); }
 function weekPts(){ var w=dkey(weekDays()[0]); return S.log.filter(function(x){ return x.d>=w; }).reduce(function(a,b){ return a+b.n; },0); }
@@ -607,7 +636,9 @@ function avColor(n){ var h=0; for(var i=0;i<n.length;i++) h=(h*31+n.charCodeAt(i
 function checked(id,day){ return S.checkins.some(function(x){ return x.c===id && x.d===day; }); }
 function weekCheckins(){ var w=dkey(weekDays()[0]); return S.checkins.filter(function(x){ return x.d>=w; }).length; }
 function board(mode){
-  var rows = SAMPLE.map(function(s){ return {n:s.n, pts: mode==="week"? s.w : s.a}; });
+  var rows;
+  if(!C.on) rows = SAMPLE.map(function(s){ return {n:s.n, pts: mode==="week"? s.w : s.a}; });
+  else rows = (C.board[mode]||[]).filter(function(r){ return !r.is_me; }).map(function(r){ return {n:r.nick, pts:r.pts}; });
   rows.push({n:S.nick, me:true, pts: mode==="week"? weekPts() : totalPts()});
   rows.sort(function(a,b){ return (b.pts-a.pts) || (a.me?-1:(b.me?1:0)); });
   return rows;
@@ -623,7 +654,7 @@ var BADGES = [
   {id:"starter", name:"Action Starter", desc:"Check in your first eco-action", icon:"leaf", c:"#4C9F38", prog:function(){ return [S.checkins.length,1]; }},
   {id:"habit", name:"Habit Builder", desc:"Reach 10 eco-action check-ins", icon:"recycle", c:"#BF8B2E", prog:function(){ return [S.checkins.length,10]; }},
   {id:"roll", name:"On a Roll", desc:"Keep a three-day streak", icon:"flame", c:"#FD6925", prog:function(){ return [curStreak(),3]; }},
-  {id:"podium", name:"Top Three", desc:"Reach the top 3 this week", icon:"trophy", c:"#FCC30B", ink:"#2B2100", prog:function(){ return [myRank("week")<=3?1:0,1]; }}
+  {id:"podium", name:"Top Three", desc:"Reach the top 3 this week", icon:"trophy", c:"#FCC30B", ink:"#2B2100", prog:function(){ return [(weekPts()>0 && (!C.on || C.board.week) && myRank("week")<=3)?1:0,1]; }}
 ];
 
 /* ---------- ui state ---------- */
@@ -644,6 +675,7 @@ function go(t){
   render();
   $("#view").scrollTop = 0;
   try{ history.replaceState(null,"","#"+t); }catch(e){}
+  if(t==="leaderboard" || t==="challenges") refreshShared();
 }
 function render(){
   var f = {learn:renderLearn, quiz:renderQuiz, badges:renderBadges, challenges:renderChallenges, leaderboard:renderBoard}[tab];
@@ -904,7 +936,7 @@ function renderBadges(){
 function renderChallenges(){
   var days=weekDays(), t=today(), wc=weekCheckins();
   var doneToday = CHALLENGES.filter(function(c){ return checked(c.id,t); }).length;
-  var comm = COMMUNITY_BASE + wc, cw = Math.min(100, Math.round(comm/COMMUNITY_GOAL*100));
+  var comm = C.on ? (C.community==null ? wc : Math.max(C.community, wc)) : COMMUNITY_BASE + wc, cw = Math.min(100, Math.round(comm/COMMUNITY_GOAL*100));
   var list = CHALLENGES.map(function(c){
     var dn=checked(c.id,t), pts=15+(c.feat?5:0);
     var dots = days.map(function(d,k){ var key=dkey(d); return '<span class="dot'+(checked(c.id,key)?" on":"")+(key===t?" today":"")+(key>t?" future":"")+'" title="'+d.toLocaleDateString("en-GB",{weekday:"long"})+'">'+"MTWTFSS"[k]+'</span>'; }).join("");
@@ -920,7 +952,7 @@ function renderChallenges(){
     '<div class="head"><p class="eyebrow">Eco-action challenges</p><h1 class="h1">Small actions, every week</h1></div>'+
     '<div class="wk"><p class="eyebrow">This week · '+fmtDay(days[0])+' to '+fmtDay(days[6])+'</p>'+
     '<div class="wk-stats"><div class="wk-stat"><b>'+wc+'</b><span>your check-ins this week</span></div><div class="wk-stat"><b>'+doneToday+'/5</b><span>actions done today</span></div></div>'+
-    '<div class="goal"><div class="goal-l"><span>All testers this week (sample)</span><b>'+comm+' / '+COMMUNITY_GOAL+'</b></div><div class="bar"><i style="--w:'+cw+'%"></i></div></div></div>'+
+    '<div class="goal"><div class="goal-l"><span>'+(C.on?"Everyone on EcoLingo this week":"All testers this week (sample)")+'</span><b id="commN">'+comm+' / '+COMMUNITY_GOAL+'</b></div><div class="bar"><i id="commBar" style="--w:'+cw+'%"></i></div></div></div>'+
     '<div class="chals">'+list+'</div>'+
     '<p class="fine">Check in once per action per day. EcoLingo trusts you, there is no photo proof.</p></section>';
 }
@@ -938,6 +970,7 @@ function checkin(id, btn){
 function renderBoard(){
   var rows=board(boardMode), me=0; rows.forEach(function(r,i){ if(r.me) me=i; });
   var pod=[1,0,2].map(function(k){ var r=rows[k];
+    if(!r) return '<div class="pod p'+(k+1)+' empty"><span class="crown"></span><span class="av lg" style="--av:var(--muted)">?</span><span class="pod-name">Open spot</span><span class="pod-pts">0 pts</span><div class="pod-block">'+(k+1)+'</div></div>';
     return '<div class="pod p'+(k+1)+(r.me?" me":"")+'"><span class="crown">'+(k===0?ic("crown"):"")+'</span><span class="av lg" style="--av:'+avColor(r.n)+'">'+initials(r.n)+'</span>'+
       '<span class="pod-name">'+esc(r.n)+'</span>'+(r.me?'<span class="you">You</span>':'<span class="pod-pts">'+r.pts+' pts</span>')+'<div class="pod-block">'+(k+1)+'</div></div>'; }).join("");
   var list = rows.slice(3).map(function(r,i){
@@ -952,18 +985,19 @@ function renderBoard(){
     '<div class="me-card"><b>#'+(me+1)+'</b><p><strong>'+esc(S.nick)+'</strong> · '+rows[me].pts+' pts<br><span class="muted">'+msg+'</span></p></div>'+
     '<div class="podium">'+pod+'</div>'+
     '<div class="rows">'+list+'</div>'+
-    '<p class="fine">Other players are sample nicknames for this prototype. Points are for fun and carry no real prizes.</p></section>';
+    '<p class="fine">'+(C.on?(C.board[boardMode]?"Live ranks from everyone on EcoLingo.":"Loading live ranks…")+" Points are for fun and carry no real prizes.":"Other players are sample nicknames for this prototype. Points are for fun and carry no real prizes.")+'</p></section>';
 }
 
 /* ---------- profile ---------- */
 function openProfile(){
   $("#sheet").innerHTML = '<div class="scrim" data-act="closeSheet"></div><div class="bsheet" role="dialog" aria-modal="true" aria-labelledby="pf-t">'+
     '<div class="grabber"></div><h2 id="pf-t" class="h2">Your nickname</h2>'+
-    '<p class="note">EcoLingo only asks for a nickname. No account, no login, and your progress stays in this browser.</p>'+
+    '<p class="note">'+(C.on?"Your nickname is shown on the leaderboard. Progress is saved to the cloud automatically.":"EcoLingo only asks for a nickname. No account, no login, and your progress stays in this browser.")+'</p>'+
     '<form id="nickForm" class="nick-row"><label class="sr" for="nick">Nickname</label><input id="nick" maxlength="16" autocomplete="off" value="'+esc(S.nick)+'"><button class="btn" type="submit">Save</button></form>'+
-    '<div class="divider"></div><p class="eyebrow">Prototype controls</p>'+
-    '<div class="ctl-row"><button class="btn ghost" data-act="reset" data-mode="sample">Load sample progress</button><button class="btn ghost" data-act="reset" data-mode="zero">Start from zero</button></div>'+
-    '<p class="note" id="resetNote">Use these to reset the demo before a test session.</p></div>';
+    (C.on?'<div class="divider"></div><p class="eyebrow">Account and sync</p><div class="acct" id="acct">'+acctHTML()+'</div>':'')+
+    '<div class="divider"></div><p class="eyebrow">'+(C.on?"Reset":"Prototype controls")+'</p>'+
+    '<div class="ctl-row">'+(C.on?'':'<button class="btn ghost" data-act="reset" data-mode="sample">Load sample progress</button>')+'<button class="btn ghost" data-act="reset" data-mode="zero">Start from zero</button></div>'+
+    '<p class="note" id="resetNote">'+(C.on?"Clears your points, badges and check-ins on every device you use.":"Use these to reset the demo before a test session.")+'</p></div>';
 }
 function closeSheet(){ $("#sheet").innerHTML=""; L=null; }
 
@@ -984,6 +1018,8 @@ var ACT = {
   board:function(el){ boardMode=el.dataset.m; render(); },
   profile:function(){ openProfile(); setTimeout(function(){ var i=$("#nick"); if(i) i.focus(); }, 50); },
   closeSheet:function(){ closeSheet(); },
+  otpBack:function(){ C.otpEmail=""; C.msg=""; C.hold=false; refreshAcct(); cloudSave(); },
+  signOut:function(){ signOut(); },
   badgeOk:function(){ $("#modal").innerHTML=""; if(badgeQ.length) setTimeout(showBadge, 150); },
   reset:function(el){
     if(el.dataset.armed!=="1"){ $$('[data-act="reset"]').forEach(function(b){ b.dataset.armed="0"; b.textContent = b.dataset.mode==="sample"?"Load sample progress":"Start from zero"; });
@@ -997,6 +1033,8 @@ document.addEventListener("click", function(e){
   var f=ACT[el.dataset.act]; if(f){ e.preventDefault(); f(el,e); }
 });
 document.addEventListener("submit", function(e){
+  if(e.target.id==="emailForm"){ e.preventDefault(); sendCode($("#email").value); return; }
+  if(e.target.id==="otpForm"){ e.preventDefault(); verifyCode($("#otp").value); return; }
   if(e.target.id!=="nickForm") return; e.preventDefault();
   var v=$("#nick").value.trim().replace(/\s+/g," ").slice(0,16);
   if(!v){ $("#nick").focus(); return; }
@@ -1008,7 +1046,163 @@ document.addEventListener("keydown", function(e){
   if($("#sheet").innerHTML){ if(L) closeLesson(); else closeSheet(); }
 });
 
+/* ---------- cloud sync ---------- */
+function syncLabel(){
+  return {connecting:["Connecting…",""], syncing:["Saving…",""], synced:["Saved to the cloud","ok"],
+          error:["Offline. Progress is kept on this device and syncs later.","bad"]}[C.status] || ["",""];
+}
+function acctHTML(){
+  var sl=syncLabel(), u=C.user, signed=u && !u.is_anonymous && u.email, h='<p class="sync '+sl[1]+'" id="syncNote">'+sl[0]+'</p>';
+  if(signed){
+    h+='<p class="note">Signed in as <strong>'+esc(u.email)+'</strong>. Sign in with the same email on another device to continue there.</p>'+
+       '<div class="ctl-row"><button class="btn ghost" data-act="signOut"'+(C.busy?' disabled':'')+'>Sign out</button></div>';
+  } else if(C.otpEmail){
+    h+='<p class="note">We emailed a sign-in link to <strong>'+esc(C.otpEmail)+'</strong>. Open it <strong>in this browser on this device</strong>. If the email shows a code instead, type it here.</p>'+
+       '<form id="otpForm" class="nick-row"><label class="sr" for="otp">Code</label><input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456"><button class="btn" type="submit"'+(C.busy?' disabled':'')+'>Verify</button></form>'+
+       '<button class="btn ghost sm" data-act="otpBack">Use a different email</button>';
+  } else {
+    h+='<p class="note">Playing as a guest on this device. Add your email to keep your progress and use EcoLingo on other devices.</p>'+
+       '<form id="emailForm" class="nick-row"><label class="sr" for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@siswa.um.edu.my"><button class="btn" type="submit"'+(C.busy?' disabled':'')+'>Send code</button></form>';
+  }
+  if(C.msg) h+='<p class="msg'+(C.msgErr?' err':'')+'" role="status">'+esc(C.msg)+'</p>';
+  return h;
+}
+function refreshAcct(){ var el=$("#acct"); if(el) el.innerHTML=acctHTML(); }
+function setStatus(s){ C.status=s; var el=$("#syncNote"); if(el){ var sl=syncLabel(); el.className="sync "+sl[1]; el.textContent=sl[0]; } }
+function say(msg, err){ C.msg=msg||""; C.msgErr=!!err; }
+
+function queueCloudSave(){ if(!C.uid || C.hold) return; clearTimeout(C.t); C.t=setTimeout(cloudSave, 800); }
+function cloudSave(){
+  clearTimeout(C.t); C.t=null;
+  if(!C.uid || C.hold) return Promise.resolve();
+  var uid=C.uid; setStatus("syncing");
+  return sb.from("profiles").upsert({ id:uid, nick:S.nick, state:S }).then(function(r){
+    if(uid!==C.uid) return;
+    if(r.error){ console.warn("EcoLingo save:", r.error); setStatus("error"); return; }
+    setStatus("synced"); refreshShared();
+  }, function(e){ console.warn("EcoLingo save:", e); setStatus("error"); });
+}
+
+/* combine two progress snapshots without losing anything */
+function mergeState(a, b){
+  var m=zeroState(a.nick||b.nick), k;
+  [a,b].forEach(function(s){
+    for(k in (s.lessons||{})) if(s.lessons[k]) m.lessons[k]=true;
+    for(k in (s.quiz||{})){ var q=s.quiz[k], p=m.quiz[k]; m.quiz[k]={best:Math.max(p?p.best:0,q.best||0), taken:Math.max(p?p.taken:0,q.taken||0)}; }
+    for(k in (s.badges||{})) if(!m.badges[k] || s.badges[k]<m.badges[k]) m.badges[k]=s.badges[k];
+  });
+  var seen={}; a.checkins.concat(b.checkins).forEach(function(x){ var id=x.c+"|"+x.d; if(!seen[id]){ seen[id]=1; m.checkins.push({c:x.c,d:x.d}); } });
+  var days={}; a.log.concat(b.log).forEach(function(x){ days[x.d]=Math.max(days[x.d]||0, x.n); });
+  m.log=Object.keys(days).sort().map(function(d){ return {d:d,n:days[d]}; });
+  var w=(a.last||"")>(b.last||"") ? a : ((b.last||"")>(a.last||"") ? b : (a.streak>=b.streak?a:b));
+  m.streak=w.streak||0; m.last=w.last||"";
+  return m;
+}
+
+function adoptUser(user){
+  C.user=user; C.uid=user.id; setStatus("syncing"); refreshAcct();
+  return sb.from("profiles").select("nick,state").eq("id", user.id).maybeSingle().then(function(r){
+    if(C.uid!==user.id) return;
+    if(r.error) throw r.error;
+    if(r.data && r.data.state && r.data.state.v===1){
+      var before=JSON.stringify(S), m=mergeState(r.data.state, S);
+      m.nick = r.data.nick || m.nick;
+      if(JSON.stringify(m)!==before){ S=m; persistLocal(); shownPts=null; renderHeader(false); if(!Q && !L) render(); var ni=$("#nick"); if(ni && document.activeElement!==ni) ni.value=S.nick; }
+    }
+    return cloudSave();
+  }).then(function(){ refreshAcct(); }, function(e){ console.warn("EcoLingo sync:", e); setStatus("error"); });
+}
+
+function onSession(ev, session){
+  if(session && session.user){
+    C.user=session.user;
+    if(C.uid!==session.user.id) adoptUser(session.user); else refreshAcct();
+  } else if(ev==="INITIAL_SESSION" || ev==="SIGNED_OUT"){
+    C.user=null; C.uid=null; signInGuest();
+  }
+}
+function signInGuest(){
+  setStatus("connecting");
+  sb.auth.signInAnonymously().then(function(r){
+    if(r.error){ console.warn("EcoLingo: guest sign-in failed. Is 'Allow anonymous sign-ins' on in Supabase?", r.error); setStatus("error"); }
+  }, function(e){ console.warn(e); setStatus("error"); });
+}
+
+var lastShared="";
+function refreshShared(){
+  if(!sb) return;
+  Promise.all([ sb.rpc("get_leaderboard",{mode:"week"}), sb.rpc("get_leaderboard",{mode:"all"}), sb.rpc("community_week_checkins") ]).then(function(rs){
+    if(!rs[0].error) C.board.week=rs[0].data||[];
+    if(!rs[1].error) C.board.all=rs[1].data||[];
+    if(!rs[2].error && typeof rs[2].data==="number") C.community=rs[2].data;
+    var sig=JSON.stringify([C.board, C.community]); if(sig===lastShared) return; lastShared=sig;
+    if(tab==="leaderboard" && !L) render();
+    if(tab==="challenges"){
+      var wc=weekCheckins(), comm=Math.max(C.community==null?wc:C.community, wc), n=$("#commN"), b=$("#commBar");
+      if(n) n.textContent=comm+" / "+COMMUNITY_GOAL; if(b) b.style.setProperty("--w", Math.min(100, Math.round(comm/COMMUNITY_GOAL*100))+"%");
+    }
+    checkBadges();
+  }, function(e){ console.warn("EcoLingo leaderboard:", e); });
+}
+
+function sendCode(raw){
+  var email=String(raw||"").trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ say("Please enter a valid email address.", true); refreshAcct(); return; }
+  C.busy=true; say("Sending…"); refreshAcct();
+  sb.auth.signInWithOtp({ email:email, options:{ shouldCreateUser:true, emailRedirectTo: location.origin + location.pathname } }).then(function(r){
+    C.busy=false;
+    if(r.error){ say(r.error.message, true); }
+    else {
+      C.otpEmail=email; say("Email sent. Check your inbox (and spam).");
+      /* the guest row is removed now so you don't appear twice after the link signs you in;
+         progress stays on this device and is merged into the account when you come back */
+      if(C.user && C.user.is_anonymous && C.uid){ clearTimeout(C.t); C.hold=true; sb.from("profiles").delete().eq("id", C.uid).then(function(){}, function(){}); }
+    }
+    refreshAcct(); var i=$(C.otpEmail?"#otp":"#email"); if(i) i.focus();
+  });
+}
+function verifyCode(raw){
+  var code=String(raw||"").replace(/\D/g,"");
+  if(code.length<6){ say("Please enter the full code from the email.", true); refreshAcct(); return; }
+  var guestId = (C.user && C.user.is_anonymous) ? C.uid : null;
+  C.busy=true; say("Checking…"); refreshAcct();
+  /* remove the guest row first so the same person does not appear twice on the leaderboard;
+     progress is still in S and gets merged into the account right after */
+  clearTimeout(C.t); C.hold=true;
+  var pre = guestId ? sb.from("profiles").delete().eq("id", guestId) : Promise.resolve({});
+  Promise.resolve(pre).then(function(){
+    return sb.auth.verifyOtp({ email:C.otpEmail, token:code, type:"email" });
+  }).then(function(r){
+    C.busy=false; C.hold=false;
+    if(r.error){ say(r.error.message, true); refreshAcct(); cloudSave(); return; }
+    C.otpEmail=""; say("You're signed in. Progress from this device was added to your account.");
+    if(r.data && r.data.session) onSession("SIGNED_IN", r.data.session); else refreshAcct();
+    toast("Signed in");
+  }, function(e){ C.busy=false; C.hold=false; say(String(e&&e.message||e), true); refreshAcct(); cloudSave(); });
+}
+function signOut(){
+  C.busy=true; refreshAcct();
+  var flush = C.t ? cloudSave() : Promise.resolve();
+  flush.then(function(){ return sb.auth.signOut(); }).then(function(){
+    C.busy=false; say("");
+    var nick=S.nick; S=zeroState(nick); persistLocal(); C.board={week:null,all:null}; lastShared="";
+    shownPts=null; renderHeader(false); closeSheet(); render(); toast("Signed out");
+    /* SIGNED_OUT event starts a fresh guest session */
+  });
+}
+
+function cloudBoot(){
+  $$("[data-cloud-hide]").forEach(function(el){ el.remove(); });
+  sb.auth.onAuthStateChange(function(ev, session){ setTimeout(function(){ onSession(ev, session); }, 0); });
+  document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="hidden" && C.t) cloudSave(); });
+  window.addEventListener("online", function(){ if(C.uid) cloudSave(); });
+}
+
 /* ---------- boot ---------- */
+if(C.on) cloudBoot();
+if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+}
 fillStaticIcons();
 renderHeader(false);
 var h=(location.hash||"").replace("#","");
