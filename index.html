@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="EcoLingo: a gamified SDG learning web app for UM students.">
+<meta name="description" content="EcoLingo: learn the UN Sustainable Development Goals in two-minute lessons, quick quizzes and weekly eco-actions.">
 <title>EcoLingo</title>
 <meta name="theme-color" content="#1C8549">
 <link rel="manifest" href="manifest.webmanifest">
@@ -384,6 +384,35 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .acct .msg{font-size:13px;color:var(--muted)}
 .acct .msg.err{color:var(--bad)}
 .pod.empty{opacity:.45}
+.mbar{display:block;height:6px;margin-top:7px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.mbar i{display:block;height:100%;width:var(--w);border-radius:inherit;background:var(--unit,var(--accent));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.combo{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;padding:4px 10px;border-radius:999px;background:var(--sun-soft);color:var(--ink);font-weight:800;font-size:12.5px;animation:mpop .45s cubic-bezier(.3,1.5,.5,1)}
+.combo .i{width:15px;height:15px;color:#FD6925}
+.fb-tag{margin-left:auto;font:700 12px var(--f-body,inherit);padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.55);color:var(--ink)}
+.recap li small{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
+.recap li small b{color:var(--good)}
+.setrow{display:flex;align-items:center;gap:12px}
+.setrow > div{flex:1;min-width:0}
+.setrow b{display:block;font-weight:700;font-size:14.5px}
+.setrow span{display:block;font-size:12.5px;color:var(--muted)}
+.switch{position:relative;width:50px;height:30px;flex:none;border-radius:999px;background:var(--line-strong);transition:background .2s}
+.switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"] i{transform:translateX(20px)}
+.welcome{gap:14px}
+.wel-mark{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);align-self:center;margin-top:4px;animation:mpop .6s cubic-bezier(.3,1.5,.5,1)}
+.wel-mark .i{width:36px;height:36px}
+.welcome h2{text-align:center;font:800 26px/1.1 var(--f-display);letter-spacing:-.02em}
+.welcome .note{text-align:center}
+.wel-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.wel-list li{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--surface-2);font-size:14px}
+.wel-list li .ico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:#fff}
+.wel-list li .ico .i{width:20px;height:20px}
+.getapp{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.getapp p{font-size:13px;color:var(--muted);line-height:1.4}
+.getapp .btn{align-self:flex-start}
+.opt{transition:transform .12s ease}
+.opt:active:not(:disabled){transform:scale(.97)}
 .ctl-row{display:flex;gap:8px;flex-wrap:wrap}
 .ctl-row .btn{flex:1 1 140px}
 .bsheet .note{font-size:13px;color:var(--muted)}
@@ -428,30 +457,21 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 </head>
 <body>
 <div class="stage">
-  <aside class="about" aria-label="About this prototype">
+  <aside class="about" aria-label="About EcoLingo">
     <div class="wm"><span class="mark" data-ic="sprout"></span>EcoLingo</div>
-    <p class="lede">A gamified SDG learning web app for UM students. Short lessons, quick quizzes and weekly eco-actions.</p>
-    <p class="meta">Clickable prototype · WIX2002 Project Management · Team 2 · Supports SDG 4.7 and SDG 12</p>
+    <p class="lede">Learn the UN Sustainable Development Goals in two-minute lessons, test yourself with quick quizzes and build greener habits every week.</p>
+    <p class="meta">Made for Universiti Malaya students · SDG 4 · SDG 12 · SDG 13</p>
     <div>
-      <p class="eyebrow" style="margin-bottom:8px">Five modules</p>
+      <p class="eyebrow" style="margin-bottom:8px">What’s inside</p>
       <nav class="about-nav">
-        <button data-act="tab" data-tab="learn"><span class="n">1</span><span><b>Lessons</b><span>Four short units that grow your SDG plant</span></span></button>
-        <button data-act="tab" data-tab="quiz"><span class="n">2</span><span><b>Quiz</b><span>20 questions with instant feedback</span></span></button>
-        <button data-act="tab" data-tab="badges"><span class="n">3</span><span><b>Points and badges</b><span>Levels from Seedling to Forest, eight badges</span></span></button>
-        <button data-act="tab" data-tab="challenges"><span class="n">4</span><span><b>Eco-action challenges</b><span>Daily check-ins for five weekly actions</span></span></button>
-        <button data-act="tab" data-tab="leaderboard"><span class="n">5</span><span><b>Leaderboard</b><span>Weekly and all-time ranks by nickname</span></span></button>
+        <button data-act="tab" data-tab="learn"><span class="n">1</span><span><b>Lessons</b><span>Four bite-sized units that grow your SDG plant</span></span></button>
+        <button data-act="tab" data-tab="quiz"><span class="n">2</span><span><b>Quiz</b><span>60 questions with instant explanations</span></span></button>
+        <button data-act="tab" data-tab="badges"><span class="n">3</span><span><b>Points and badges</b><span>Level up from Seedling to Forest</span></span></button>
+        <button data-act="tab" data-tab="challenges"><span class="n">4</span><span><b>Eco-action challenges</b><span>Daily check-ins for five green habits</span></span></button>
+        <button data-act="tab" data-tab="leaderboard"><span class="n">5</span><span><b>Leaderboard</b><span>Live weekly and all-time ranks</span></span></button>
       </nav>
     </div>
-    <div>
-      <p class="eyebrow" style="margin-bottom:8px">Not in this prototype</p>
-      <div class="scope">
-        <span class="chip" data-icx data-cloud-hide>Login or accounts</span>
-        <span class="chip" data-icx>Native mobile app</span>
-        <span class="chip" data-icx data-cloud-hide>Cross-device sync</span>
-        <span class="chip" data-icx>Languages other than English</span>
-        <span class="chip" data-icx>Real prizes</span>
-      </div>
-    </div>
+    <div class="getapp" id="getApp"></div>
   </aside>
 
   <div class="app" id="app">
@@ -459,7 +479,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
       <div class="brand"><span class="mark" data-ic="sprout"></span>EcoLingo</div>
       <span class="pill streak" title="Day streak"><span data-ic="flame"></span><span id="streakN">0</span><span class="sr"> day streak</span></span>
       <span class="pill pts" id="ptsPill" title="Points"><span data-ic="star"></span><span id="ptsN">0</span><span class="sr"> points</span></span>
-      <button class="avatar" id="avatar" data-act="profile" aria-label="Edit nickname">E</button>
+      <button class="avatar" id="avatar" data-act="profile" aria-label="Profile and settings">E</button>
     </header>
     <main class="view" id="view" aria-live="polite"></main>
     <nav class="tabbar" role="tablist" aria-label="EcoLingo sections">
@@ -521,21 +541,35 @@ var UNITS = [
   { id:"u1", n:1, sdg:17, color:"#19486A", goal:"Partnerships for the Goals", title:"The 17 Goals", short:"What the SDGs are and why they matter",
     cards:[
       {t:"17 goals, one shared plan", b:"In September 2015, all 193 UN member states adopted the 2030 Agenda for Sustainable Development. At its heart are 17 Sustainable Development Goals, the SDGs.", f:"The goals apply to every country, rich or poor, not only developing ones."},
-      {t:"169 targets to track", b:"Each goal breaks down into smaller targets with indicators, so progress can be measured. Across all 17 goals there are 169 targets.", f:"Target numbers work like addresses: 12.5 means Goal 12, target 5."},
+      {t:"Before the SDGs", b:"From 2000 to 2015, the world worked on eight Millennium Development Goals (MDGs), mostly aimed at poorer countries. The SDGs replaced them with a broader, universal plan.", f:"The MDGs focused heavily on poverty and health. The SDGs added climate, cities, oceans, peace and more."},
+      {t:"169 targets to track", b:"Each goal breaks down into targets with indicators, so progress can be measured. Across all 17 goals there are 169 targets.", f:"Target numbers work like addresses: 12.5 means Goal 12, target 5."},
       {t:"The five Ps", b:"The goals are often grouped into five themes: People, Planet, Prosperity, Peace and Partnership.", f:"Goal 17, Partnerships for the Goals, is about working together to reach the other 16."},
-      {t:"Where you come in", b:"Governments set policy, but daily choices add up too: what you buy, how you get to class and what ends up in the bin.", f:"EcoLingo’s weekly challenges turn these choices into small habits you can track."}
+      {t:"Leave no one behind", b:"The central promise of the 2030 Agenda is to leave no one behind, and to reach the people furthest behind first. Progress that skips some groups does not count as success.", f:"Every year, countries can present a Voluntary National Review of their progress at the UN High-level Political Forum."},
+      {t:"Everything is connected", b:"The goals overlap. Clean energy (Goal 7) cuts emissions (Goal 13) and cleaner air helps health (Goal 3). Daily choices touch several goals at once: what you buy, how you travel and what you throw away.", f:"EcoLingo’s weekly challenges turn these choices into small habits you can track."}
     ],
     quiz:[
       {q:"How many Sustainable Development Goals are there?", o:["12","15","17","20"], a:2, why:"There are 17 SDGs, adopted together in 2015."},
-      {q:"In which year did UN member states adopt the SDGs?", o:["2000","2010","2015","2020"], a:2, why:"The 2030 Agenda and its 17 goals were adopted in September 2015. The Millennium Development Goals came before them, in 2000."},
+      {q:"In which year did UN member states adopt the SDGs?", o:["2000","2010","2015","2020"], a:2, why:"The 2030 Agenda and its 17 goals were adopted in September 2015."},
       {q:"By which year are most SDG targets meant to be reached?", o:["2025","2030","2040","2050"], a:1, why:"The goals belong to the 2030 Agenda, so most targets aim for 2030."},
       {q:"How many targets sit under the 17 goals?", o:["17","51","169","300"], a:2, why:"The 17 goals contain 169 targets in total."},
-      {q:"Which of these is NOT one of the five Ps?", o:["People","Planet","Profit","Peace"], a:2, why:"The five Ps are People, Planet, Prosperity, Peace and Partnership. Profit is not one of them."}
+      {q:"Which of these is NOT one of the five Ps?", o:["People","Planet","Profit","Peace"], a:2, why:"The five Ps are People, Planet, Prosperity, Peace and Partnership. Profit is not one of them."},
+      {q:"The SDGs replaced which earlier set of eight UN goals?", o:["Millennium Development Goals","Kyoto Targets","Rio Principles","Paris Goals"], a:0, why:"The eight Millennium Development Goals ran from 2000 to 2015 and were followed by the 17 SDGs."},
+      {q:"True or false: the SDGs only apply to developing countries.", o:["True","False"], a:1, tf:true, why:"False. Unlike the MDGs, the SDGs are universal and apply to every country, including wealthy ones."},
+      {q:"What is the central promise of the 2030 Agenda?", o:["Leave no one behind","Growth comes first","Think global, act local","Reduce, reuse, recycle"], a:0, why:"“Leave no one behind” is the core pledge: progress must reach everyone, starting with those furthest behind."},
+      {q:"In “Target 4.7”, what does the 4 tell you?", o:["The goal number","The year it started","Its priority level","How many indicators it has"], a:0, why:"Targets are numbered goal first, then target. 4.7 is the seventh target of Goal 4."},
+      {q:"Which goal is called Partnerships for the Goals?", o:["SDG 1","SDG 10","SDG 16","SDG 17"], a:3, why:"SDG 17 is about cooperation between governments, businesses and people to reach all the other goals."},
+      {q:"A campus installs solar panels. Which pair of goals does this support most directly?", o:["SDG 7 and SDG 13","SDG 2 and SDG 14","SDG 5 and SDG 16","SDG 1 and SDG 3"], a:0, why:"Solar power is Affordable and Clean Energy (SDG 7) and it cuts emissions, which is Climate Action (SDG 13)."},
+      {q:"Where can countries present a Voluntary National Review of their SDG progress?", o:["UN High-level Political Forum","World Economic Forum","G20 Summit","Olympic Council"], a:0, why:"Voluntary National Reviews are presented at the UN High-level Political Forum on Sustainable Development, held every year."},
+      {q:"True or false: each SDG has targets and indicators so progress can be measured.", o:["True","False"], a:0, tf:true, why:"True. Goals break down into targets, and indicators track whether each target is on course."},
+      {q:"Which SDG covers clean water and sanitation?", o:["SDG 6","SDG 9","SDG 11","SDG 15"], a:0, why:"SDG 6 is Clean Water and Sanitation."},
+      {q:"Protecting forests and wildlife on land falls under which goal?", o:["SDG 14: Life Below Water","SDG 15: Life on Land","SDG 11: Sustainable Cities","SDG 9: Industry and Innovation"], a:1, why:"SDG 15, Life on Land, covers forests, land ecosystems and biodiversity. SDG 14 covers oceans."}
     ]},
   { id:"u2", n:2, sdg:4, color:"#C5192D", goal:"Quality Education", title:"Learning for change", short:"SDG 4 and target 4.7, education for sustainable development",
     cards:[
       {t:"Goal 4: Quality Education", b:"SDG 4 aims for inclusive, fair and good-quality education, and lifelong learning opportunities for everyone.", f:"It covers more than schools: universities, skills training and adult learning count too."},
+      {t:"Targets that touch your life", b:"Target 4.1 is free, fair primary and secondary education for all children. Target 4.3 is equal access to affordable technical, vocational and tertiary education, including university.", f:"As a university student, target 4.3 is about you."},
       {t:"Target 4.7", b:"By 2030, every learner should gain the knowledge and skills needed to promote sustainable development, including sustainable lifestyles, human rights and global citizenship.", f:"This idea is called Education for Sustainable Development, or ESD."},
+      {t:"Who leads it", b:"UNESCO, the UN’s education agency, coordinates SDG 4 worldwide. Its “ESD for 2030” framework helps countries and universities put target 4.7 into practice.", f:"Inclusive education means no learner is shut out because of income, gender, disability or where they live."},
       {t:"Knowing is not yet doing", b:"Many people care about the environment but still find it hard to change habits. Short, regular practice helps a new habit stick better than one long talk.", f:"That is why each EcoLingo lesson takes about two minutes."},
       {t:"Pass it on", b:"People tend to copy what their friends do. Sharing a habit with your roommate or study group spreads it further than doing it alone.", f:"The leaderboard is a small nudge to learn alongside your coursemates."}
     ],
@@ -544,26 +578,50 @@ var UNITS = [
       {q:"Target 4.7 wants every learner to gain the skills to…", o:["Get higher grades","Promote sustainable development","Learn a second language","Use more technology"], a:1, why:"Target 4.7 is about the knowledge and skills needed to promote sustainable development."},
       {q:"What does ESD stand for?", o:["Education for Sustainable Development","Energy Saving Design","Environmental Science Degree","Earth Systems Data"], a:0, why:"ESD means Education for Sustainable Development, the idea behind target 4.7."},
       {q:"Which approach helps a new habit stick best?", o:["One long lecture a semester","Short, regular practice","Reading a 50-page report","Waiting for a new rule"], a:1, why:"Short, repeated practice helps new habits stick."},
-      {q:"Which of these is named in target 4.7?", o:["Global citizenship","Building highways","Stock trading","Space travel"], a:0, why:"Target 4.7 names sustainable lifestyles, human rights, gender equality and global citizenship, among others."}
+      {q:"Which of these is named in target 4.7?", o:["Global citizenship","Building highways","Stock trading","Space travel"], a:0, why:"Target 4.7 names sustainable lifestyles, human rights, gender equality and global citizenship, among others."},
+      {q:"Which target covers equal access to affordable university education?", o:["Target 4.1","Target 4.3","Target 4.7","Target 12.5"], a:1, why:"Target 4.3 is about equal access to affordable, quality technical, vocational and tertiary education, including university."},
+      {q:"Which UN agency coordinates SDG 4 worldwide?", o:["UNESCO","WHO","FAO","UNHCR"], a:0, why:"UNESCO, the UN Educational, Scientific and Cultural Organization, leads and coordinates SDG 4."},
+      {q:"True or false: SDG 4 is only about primary schools.", o:["True","False"], a:1, tf:true, why:"False. SDG 4 covers lifelong learning: early childhood, schools, vocational training, university and adult education."},
+      {q:"Target 4.1 is about…", o:["Free, fair primary and secondary education","University scholarships abroad","Higher pay for lecturers","Faster campus Wi-Fi"], a:0, why:"Target 4.1 aims for every girl and boy to complete free, fair and good-quality primary and secondary education."},
+      {q:"SDG 4 calls for “inclusive” education. What does that mean?", o:["Only top students get places","Open to everyone, whatever their background, gender or disability","Classes taught in one language only","Education that is fully online"], a:1, why:"Inclusive education means no one is shut out because of income, gender, disability or where they live."},
+      {q:"You just learned about food waste. What is the best next step to make it stick?", o:["Wait until you remember next semester","Pick one small action and repeat it this week","Read everything about food waste tonight","Tell yourself you will change someday"], a:1, why:"One small, repeated action turns knowledge into a habit. That is the gap target 4.7 is trying to close."},
+      {q:"Which is an example of global citizenship?", o:["Thinking about how your choices affect people in other countries","Only following news from your own town","Collecting stamps from many countries","Holding two passports"], a:0, why:"Global citizenship means seeing yourself as part of a wider world and acting with others in mind."},
+      {q:"True or false: telling friends about a green habit can help it spread.", o:["True","False"], a:0, tf:true, why:"True. People tend to copy what their friends do, so shared habits spread further."},
+      {q:"Which target number is about education for sustainable development?", o:["4.7","7.4","12.8","13.3"], a:0, why:"Target 4.7 is the one about education for sustainable development. Targets 12.8 and 13.3 are related, but they focus on public awareness and climate education."},
+      {q:"What does “lifelong learning” mean in SDG 4?", o:["Learning only ends when you graduate","Opportunities to keep learning at every age","Staying in university for life","Learning that never has exams"], a:1, why:"Lifelong learning means everyone should have chances to keep learning, from childhood to adulthood."}
     ]},
   { id:"u3", n:3, sdg:12, color:"#BF8B2E", goal:"Responsible Consumption and Production", title:"Use less, waste less", short:"SDG 12, responsible consumption and production",
     cards:[
       {t:"Goal 12", b:"SDG 12 is Responsible Consumption and Production: getting more out of what we make and use, while creating less waste and pollution.", f:"It looks at both sides, how things are made and how we use them."},
       {t:"Target 12.5", b:"By 2030, substantially reduce waste generation through prevention, reduction, recycling and reuse.", f:"Notice the order: preventing waste comes before recycling it."},
-      {t:"The waste hierarchy", b:"Best is to refuse and reduce. Next, reuse and repair. Then recycle. Throwing away comes last. Recycling still uses energy, so avoiding waste wins.", f:"A refilled bottle beats a recycled one."},
-      {t:"Target 12.3: food waste", b:"By 2030, halve global food waste per person at the retail and consumer level, and reduce food losses along supply chains.", f:"Ordering only what you can finish is one of the easiest wins."}
+      {t:"The waste hierarchy", b:"Best is to refuse and reduce. Next, reuse and repair. Then recycle. Throwing away comes last. Recycling still uses energy and water, so avoiding waste wins.", f:"A refilled bottle beats a recycled one."},
+      {t:"Target 12.3: food waste", b:"By 2030, halve global food waste per person at the retail and consumer level, and reduce food losses along supply chains.", f:"Asking for less rice when you are not that hungry is one of the easiest wins."},
+      {t:"Sort it right in Malaysia", b:"Malaysia’s recycling bins use three colours: blue for paper, orange for plastic and metal cans, and brown for glass. Rinse containers first, because food and grease spoil recyclables.", f:"A greasy pizza box base can contaminate a whole batch of paper. Tear off the clean lid and recycle only that."},
+      {t:"Think circular", b:"A linear economy goes take, make, throw away. A circular economy keeps products and materials in use for as long as possible: design to last, share, repair, then recycle.", f:"Target 12.6 encourages companies to adopt sustainable practices and report on them."}
     ],
     quiz:[
       {q:"What is the full name of SDG 12?", o:["Responsible Consumption and Production","Sustainable Cities and Communities","Life on Land","Industry and Innovation"], a:0, why:"SDG 12 is Responsible Consumption and Production."},
       {q:"In the waste hierarchy, which option is best?", o:["Recycle","Throw away","Reduce","Burn for energy"], a:2, why:"Reducing or refusing comes first, because that waste never exists."},
       {q:"Target 12.3 aims to do what to food waste per person by 2030?", o:["Halve it","Cut it by 10%","Double its recycling","Ban it"], a:0, why:"Target 12.3 aims to halve per-person food waste at retail and consumer level."},
       {q:"Which of these is an example of reuse?", o:["Buying a new plastic bottle","Refilling your own bottle","Putting a can in the recycling bin","Throwing away a broken pen"], a:1, why:"Refilling the same bottle is reuse. Recycling breaks an item down to make something new."},
-      {q:"Target 12.5 reduces waste through prevention, reduction, recycling and…", o:["Reuse","Burning","Exporting","Landfill"], a:0, why:"Target 12.5 names prevention, reduction, recycling and reuse."}
+      {q:"Target 12.5 reduces waste through prevention, reduction, recycling and…", o:["Reuse","Burning","Exporting","Landfill"], a:0, why:"Target 12.5 names prevention, reduction, recycling and reuse."},
+      {q:"In Malaysia, which recycling bin is for paper?", o:["Blue","Orange","Brown","Green"], a:0, why:"Blue is for paper and cardboard. Orange is for plastic and cans, and brown is for glass."},
+      {q:"Which Malaysian recycling bin takes glass bottles?", o:["Blue","Orange","Brown","Red"], a:2, why:"Brown is for glass bottles and jars."},
+      {q:"Where does an empty aluminium drink can go?", o:["Blue bin","Orange bin","Brown bin","General waste"], a:1, why:"The orange bin takes plastics and metal cans, including aluminium."},
+      {q:"True or false: a container with leftover food or grease can contaminate recycling.", o:["True","False"], a:0, tf:true, why:"True. Food and grease can spoil a whole batch, so rinse containers before recycling them."},
+      {q:"A linear economy follows which pattern?", o:["Take, make, throw away","Reduce, reuse, recycle","Design, repair, share","Borrow, return, borrow again"], a:0, why:"A linear economy takes resources, makes products and throws them away. A circular economy tries to close that loop."},
+      {q:"Which best describes a circular economy?", o:["Keeping products and materials in use for as long as possible","Recycling everything after one use","Buying only round products","Moving factories to other countries"], a:0, why:"A circular economy designs out waste by keeping products and materials in use through sharing, repair, reuse and recycling."},
+      {q:"One side of your earphones stopped working. What is the most SDG 12-friendly first step?", o:["Throw them away and buy new ones","Check whether they can be repaired","Put them in the general bin","Buy two spare pairs"], a:1, why:"Repair comes before replacing. If they truly cannot be fixed, take them to e-waste collection."},
+      {q:"Target 12.6 encourages companies to…", o:["Adopt sustainable practices and report on them","Advertise more products","Stop paying taxes","Make products that break faster"], a:0, why:"Target 12.6 asks companies, especially large ones, to adopt sustainable practices and include sustainability information in their reporting."},
+      {q:"True or false: recycling uses no energy at all.", o:["True","False"], a:1, tf:true, why:"False. Collecting, sorting and reprocessing all use energy and water, which is why reducing and reusing rank higher."},
+      {q:"At the café you are not very hungry. What is the best choice?", o:["Order a full plate and leave half","Ask for a smaller portion or less rice","Order two plates to share later","Skip the meal and snack on chips"], a:1, why:"Asking for a smaller portion prevents food waste before it happens, which is exactly what target 12.3 is about."}
     ]},
   { id:"u4", n:4, sdg:13, color:"#3F7E44", goal:"Climate Action", title:"Act on campus", short:"SDG 13, climate action in daily life",
     cards:[
-      {t:"Goal 13: Climate Action", b:"SDG 13 calls for urgent action to fight climate change and its impacts, from cutting emissions to preparing for floods and heat.", f:"Heavy rain, floods and heatwaves are some of the impacts it asks countries to prepare for."},
-      {t:"Power down", b:"Lights, fans and air-conditioners left running in empty rooms waste electricity. Switching off when you leave is the simplest climate action there is.", f:"Setting the air-con a little warmer also cuts the energy it uses."},
+      {t:"Goal 13: Climate Action", b:"SDG 13 calls for urgent action to fight climate change and its impacts, from cutting emissions to preparing for floods and heat.", f:"Heavy rain, flash floods and heatwaves are some of the impacts it asks countries to prepare for."},
+      {t:"Cutting and coping", b:"Mitigation means cutting greenhouse gas emissions, for example with solar power. Adaptation means preparing for impacts, for example better drains for flash floods. SDG 13 needs both.", f:"Target 13.3 is about climate education and awareness, so learning about climate counts as climate action."},
+      {t:"The bigger picture", b:"In the 2015 Paris Agreement, countries agreed to keep warming well below 2°C and to pursue efforts to limit it to 1.5°C. Malaysia aims to reach net-zero greenhouse gas emissions as early as 2050.", f:"Food waste rotting in landfill releases methane, a powerful greenhouse gas."},
+      {t:"Power down", b:"Lights, fans and air-conditioners left running in empty rooms waste electricity. Switching off when you leave is the simplest climate action there is.", f:"Setting the air-con a little warmer and using a fan also cuts the energy it uses. LED bulbs use far less power than old incandescent ones."},
       {t:"Getting to class", b:"Walking, cycling and shared buses produce far less carbon per trip than driving alone.", f:"For short trips, walking is also the cheapest option."},
       {t:"Plates and plugs", b:"Plant-based meals usually have a smaller carbon footprint than beef-heavy ones. Old phones and chargers belong in e-waste collection, not the general bin.", f:"E-waste holds metals that can be recovered, and harmful substances that should not reach landfill."}
     ],
@@ -572,7 +630,17 @@ var UNITS = [
       {q:"Your class is 1 km away. Which choice has the lowest carbon footprint?", o:["Drive alone","Take an e-hailing car","Walk","Ride a motorbike"], a:2, why:"Walking produces almost no emissions for a short trip."},
       {q:"You are the last to leave the tutorial room. What should you do?", o:["Leave everything on for the next class","Switch off lights, fans and air-con","Switch off only the projector","Open the windows"], a:1, why:"Switching everything off stops electricity being wasted on an empty room."},
       {q:"Which meal usually has the smallest carbon footprint?", o:["Beef burger","Lamb curry","Tofu and vegetable rice","Steak"], a:2, why:"Plant-based meals usually have a much smaller footprint than red meat."},
-      {q:"Where should an old phone charger go?", o:["General rubbish bin","E-waste collection point","Paper recycling","Food waste bin"], a:1, why:"Chargers are e-waste. Collection points recover the metals and keep harmful parts out of landfill."}
+      {q:"Where should an old phone charger go?", o:["General rubbish bin","E-waste collection point","Paper recycling","Food waste bin"], a:1, why:"Chargers are e-waste. Collection points recover the metals and keep harmful parts out of landfill."},
+      {q:"The Paris Agreement aims to pursue efforts to limit warming to…", o:["1.5°C","3°C","4°C","0.5°C"], a:0, why:"Countries agreed to keep warming well below 2°C and to pursue efforts to limit it to 1.5°C above pre-industrial levels."},
+      {q:"Building better drains to cope with flash floods is an example of…", o:["Climate adaptation","Climate mitigation","Carbon offsetting","Recycling"], a:0, why:"Adaptation means preparing for climate impacts. Mitigation means cutting the emissions that cause them."},
+      {q:"Switching a building to solar power is mainly…", o:["Climate mitigation","Climate adaptation","Flood control","Water saving"], a:0, why:"Solar power cuts greenhouse gas emissions, which is mitigation."},
+      {q:"Which of these is NOT a greenhouse gas?", o:["Carbon dioxide","Methane","Nitrous oxide","Oxygen"], a:3, why:"Oxygen does not trap heat the way carbon dioxide, methane and nitrous oxide do."},
+      {q:"Why is food waste in landfill a climate problem?", o:["It releases methane as it rots","It makes the soil too rich","It attracts birds","It is too heavy to transport"], a:0, why:"Food rotting without oxygen in landfill releases methane, a powerful greenhouse gas."},
+      {q:"Malaysia aims to reach net-zero greenhouse gas emissions as early as…", o:["2030","2040","2050","2070"], a:2, why:"Under the 12th Malaysia Plan, Malaysia aims for net-zero greenhouse gas emissions as early as 2050."},
+      {q:"True or false: learning about climate change counts toward SDG 13.", o:["True","False"], a:0, tf:true, why:"True. Target 13.3 is about improving climate change education and awareness."},
+      {q:"True or false: a phone charger left plugged in with no phone attached uses no electricity.", o:["True","False"], a:1, tf:true, why:"False. It still draws a small amount of standby power. Switching off at the plug stops it."},
+      {q:"Which light bulb uses the least electricity for the same brightness?", o:["LED","Incandescent","Halogen","They are all the same"], a:0, why:"LED bulbs use far less electricity than incandescent or halogen bulbs for the same light."},
+      {q:"Your hostel room feels hot. Which option saves the most energy while keeping you comfortable?", o:["Air-con at 16°C with the door open","A fan, plus air-con set a few degrees warmer","Air-con at 16°C all day","Two portable heaters"], a:1, why:"Each degree warmer on the air-con saves energy, and a fan makes the room feel cooler for very little power."}
     ]}
 ];
 var CHALLENGES = [
@@ -583,13 +651,8 @@ var CHALLENGES = [
   {id:"plate", t:"Clean plate", d:"Order only what you can finish and leave no food behind.", icon:"plate", sdg:12, color:"#BF8B2E"}
 ];
 var LEVELS = [{n:"Seedling",p:0},{n:"Sprout",p:100},{n:"Sapling",p:250},{n:"Tree",p:500},{n:"Forest",p:900}];
-var SAMPLE = [
-  {n:"AmirahHijau",w:240,a:1240},{n:"KitarKing",w:205,a:980},{n:"LeafyLin",w:190,a:875},
-  {n:"BotolBuddy",w:160,a:760},{n:"Daun_Dan",w:140,a:640},{n:"SolarSiti",w:120,a:520},
-  {n:"TumblerTeo",w:95,a:410},{n:"RimbaRaj",w:70,a:330},{n:"ZeroWasteZ",w:55,a:260}
-];
 var AVC = ["#19486A","#C5192D","#BF8B2E","#3F7E44","#0A97D9","#DD1367","#FD6925","#4C9F38","#A21942"];
-var COMMUNITY_BASE = 37, COMMUNITY_GOAL = 50;
+var COMMUNITY_GOAL = 50, QN_UNIT = 8, QN_MIX = 10, MIX_BONUS = 15;
 
 /* ---------- dates ---------- */
 function pad(n){ return (n<10?"0":"")+n; }
@@ -612,22 +675,22 @@ var C = { on:!!sb, user:null, uid:null, status: sb?"connecting":"local", board:{
 
 /* ---------- state ---------- */
 var KEY = "ecolingo-proto-v1";
-function sampleState(){
-  var y=daysAgo(1), y2=daysAgo(2);
-  return { v:1, nick:"EcoRookie", lessons:{u1:true}, quiz:{u1:{best:4,taken:1}},
-    checkins:[{c:"bottle",d:y},{c:"lights",d:y}],
-    log:[{d:y2,n:60},{d:y,n:30}], streak:2, last:y, badges:{sprout:y2, starter:y} };
-}
-function zeroState(nick){ return { v:1, nick:nick||"EcoRookie", lessons:{}, quiz:{}, checkins:[], log:[], streak:0, last:"", badges:{} }; }
-function load(){ try{ var v=JSON.parse(localStorage.getItem(KEY)); return v && v.v===1 ? v : null; }catch(e){ return null; } }
+function zeroState(nick){ return { v:1, nick:nick||"EcoRookie", lessons:{}, quiz:{}, checkins:[], log:[], streak:0, last:"", badges:{}, qa:{}, perfect:{}, mixDay:"", onb:false }; }
+function norm(s){ if(!s) return s; s.qa=s.qa||{}; s.perfect=s.perfect||{}; s.mixDay=s.mixDay||""; s.onb=!!s.onb; s.lessons=s.lessons||{}; s.quiz=s.quiz||{}; s.checkins=s.checkins||[]; s.log=s.log||[]; s.badges=s.badges||{}; return s; }
+function load(){ try{ var v=JSON.parse(localStorage.getItem(KEY)); return v && v.v===1 ? norm(v) : null; }catch(e){ return null; } }
 function persistLocal(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 function save(){ persistLocal(); queueCloudSave(); }
-var S = load() || (C.on ? zeroState() : sampleState());
+var S = load() || zeroState();
 
 function totalPts(){ return S.log.reduce(function(a,b){ return a+b.n; },0); }
 function weekPts(){ var w=dkey(weekDays()[0]); return S.log.filter(function(x){ return x.d>=w; }).reduce(function(a,b){ return a+b.n; },0); }
 function lessonsDone(){ return UNITS.filter(function(u){ return S.lessons[u.id]; }).length; }
-function bestAny(){ var m=0; Object.keys(S.quiz).forEach(function(k){ m=Math.max(m,S.quiz[k].best); }); return m; }
+function qid(u,i){ return u.id+"-"+i; }
+function mastered(u){ var m=0; u.quiz.forEach(function(_,i){ if(S.qa[qid(u,i)]) m++; }); return m; }
+function totalQs(){ return UNITS.reduce(function(a,u){ return a+u.quiz.length; },0); }
+function totalCards(){ return UNITS.reduce(function(a,u){ return a+u.cards.length; },0); }
+function masteredAll(){ return UNITS.reduce(function(a,u){ return a+mastered(u); },0); }
+function perfectAny(){ if(Object.keys(S.perfect).length) return true; return Object.keys(S.quiz).some(function(k){ var q=S.quiz[k]; return q && q.best>=(q.of||5); }); }
 function unitsQuizzed(){ return UNITS.filter(function(u){ return S.quiz[u.id]; }).length; }
 function curStreak(){ return (S.last===today()||S.last===daysAgo(1)) ? S.streak : 0; }
 function levelIdx(p){ var i=0; LEVELS.forEach(function(l,j){ if(p>=l.p) i=j; }); return i; }
@@ -637,8 +700,7 @@ function checked(id,day){ return S.checkins.some(function(x){ return x.c===id &&
 function weekCheckins(){ var w=dkey(weekDays()[0]); return S.checkins.filter(function(x){ return x.d>=w; }).length; }
 function board(mode){
   var rows;
-  if(!C.on) rows = SAMPLE.map(function(s){ return {n:s.n, pts: mode==="week"? s.w : s.a}; });
-  else rows = (C.board[mode]||[]).filter(function(r){ return !r.is_me; }).map(function(r){ return {n:r.nick, pts:r.pts}; });
+  rows = (C.board[mode]||[]).filter(function(r){ return !r.is_me; }).map(function(r){ return {n:r.nick, pts:r.pts}; });
   rows.push({n:S.nick, me:true, pts: mode==="week"? weekPts() : totalPts()});
   rows.sort(function(a,b){ return (b.pts-a.pts) || (a.me?-1:(b.me?1:0)); });
   return rows;
@@ -649,7 +711,7 @@ function touch(){ var t=today(); if(S.last===t) return; S.streak = (S.last===day
 var BADGES = [
   {id:"sprout", name:"First Sprout", desc:"Finish your first lesson", icon:"sprout", c:"#3F7E44", prog:function(){ return [lessonsDone(),1]; }},
   {id:"getter", name:"Goal Getter", desc:"Finish all four lessons", icon:"globe", c:"#19486A", prog:function(){ return [lessonsDone(),4]; }},
-  {id:"ace", name:"Sharp Mind", desc:"Score 5 out of 5 in any quiz", icon:"target", c:"#C5192D", prog:function(){ return [bestAny(),5]; }},
+  {id:"ace", name:"Sharp Mind", desc:"Get a perfect score in any quiz", icon:"target", c:"#C5192D", prog:function(){ return [perfectAny()?1:0,1]; }},
   {id:"explorer", name:"Quiz Explorer", desc:"Take the quiz for every unit", icon:"compass", c:"#0A97D9", prog:function(){ return [unitsQuizzed(),4]; }},
   {id:"starter", name:"Action Starter", desc:"Check in your first eco-action", icon:"leaf", c:"#4C9F38", prog:function(){ return [S.checkins.length,1]; }},
   {id:"habit", name:"Habit Builder", desc:"Reach 10 eco-action check-ins", icon:"recycle", c:"#BF8B2E", prog:function(){ return [S.checkins.length,10]; }},
@@ -697,11 +759,14 @@ function toast(msg){ var t=document.createElement("div"); t.className="toast"; t
 
 /* ---------- points + badges ---------- */
 function award(n, rect){
+  var before=levelIdx(totalPts());
   var last = S.log[S.log.length-1], t=today();
   if(last && last.d===t) last.n += n; else S.log.push({d:t,n:n});
   touch(); save();
-  if(reduced || !rect){ renderHeader(true); }
-  else floatPts(n, rect, function(){ renderHeader(true); });
+  var after=levelIdx(totalPts());
+  if(after>before) badgeQ.push({level:true, name:LEVELS[after].n, desc:"You reached level "+(after+1)+" with "+totalPts()+" points. Keep growing!", icon:"sprout", c:"#1C8549"});
+  if(reduced || !rect){ renderHeader(true); SFX.play("coin"); }
+  else floatPts(n, rect, function(){ renderHeader(true); SFX.play("coin"); });
   setTimeout(checkBadges, reduced ? 60 : 950);
 }
 function floatPts(n, rect, done){
@@ -720,15 +785,16 @@ function floatPts(n, rect, done){
 function checkBadges(){
   var any=false;
   BADGES.forEach(function(b){ if(S.badges[b.id]) return; var p=b.prog(); if(p[0]>=p[1]){ S.badges[b.id]=today(); badgeQ.push(b); any=true; } });
-  if(any){ save(); if(!$("#modal").innerHTML) showBadge(); if(tab==="badges") render(); }
+  if(any){ save(); if(tab==="badges") render(); }
+  if(badgeQ.length && !$("#modal").innerHTML) showBadge();
 }
 function showBadge(){
   var b=badgeQ.shift(); if(!b) return;
   $("#modal").innerHTML = '<div class="modal-wrap"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="bm-t">'+
     '<div class="emb" style="--bc:'+b.c+';'+(b.ink?'--bi:'+b.ink:'')+'">'+ic(b.icon)+'</div>'+
-    '<p class="eyebrow">Badge unlocked</p><h2 id="bm-t">'+b.name+'</h2><p>'+b.desc+'</p>'+
-    '<button class="btn" data-act="badgeOk">Nice!</button></div></div>';
-  confetti();
+    '<p class="eyebrow">'+(b.level?"Level up!":"Badge unlocked")+'</p><h2 id="bm-t">'+b.name+'</h2><p>'+b.desc+'</p>'+
+    '<button class="btn" data-act="badgeOk">'+(b.level?"Let’s go":"Nice!")+'</button></div></div>';
+  confetti(); SFX.play(b.level?"levelup":"badge"); SFX.buzz([20,40,20,40,60]);
   var btn=$("#modal .btn"); if(btn) btn.focus();
 }
 function confetti(){
@@ -769,8 +835,8 @@ function renderLearn(){
   for(var i=0;i<UNITS.length;i++) if(!S.lessons[UNITS[i].id]){ next=UNITS[i]; break; }
   var rows = UNITS.map(function(u){
     var ld=!!S.lessons[u.id], q=S.quiz[u.id], isNext=next&&next.id===u.id;
-    var status = ld ? '<span class="status done">'+ic("check")+'Lesson done'+(q?' · Quiz best '+q.best+'/5':' · Quiz not taken')+'</span>'
-                    : '<span class="status">4 cards · about 2 min</span>';
+    var status = ld ? '<span class="status done">'+ic("check")+'Lesson done · '+(q?'Quiz mastery '+mastered(u)+'/'+u.quiz.length:'Quiz not taken')+'</span>'
+                    : '<span class="status">'+u.cards.length+' cards · about 3 min</span>';
     var end = ld ? '<span class="ok-dot">'+ic("check")+'</span>' : (isNext ? '<span class="chip next">Start</span>' : ic("chev"));
     return '<button class="unit'+(ld?" is-done":"")+(isNext?" is-next":"")+'" data-act="lesson" data-u="'+u.id+'" style="--unit:'+u.color+'">'+
       '<span class="sdg-tile"><small>SDG</small><b>'+u.sdg+'</b></span>'+
@@ -783,7 +849,7 @@ function renderLearn(){
   return '<section class="screen">'+
     '<div class="head"><p class="eyebrow">'+greeting()+', '+esc(S.nick)+'</p><h1 class="h1">Grow your SDG plant</h1></div>'+
     '<div class="grow card">'+plantSVG()+'<div class="grow-text"><p class="eyebrow">Your plant</p><p class="grow-big">'+done+' <span>of 4 leaves</span></p><p class="muted">Each lesson you finish grows a leaf in that goal’s colour.</p>'+cta+'</div></div>'+
-    '<div class="sec-head"><h2 class="h2">Learning path</h2><span class="muted smt">4 units · 16 cards · 20 questions</span></div>'+
+    '<div class="sec-head"><h2 class="h2">Learning path</h2><span class="muted smt">'+UNITS.length+' units · '+totalCards()+' cards · '+totalQs()+' questions</span></div>'+
     '<div class="units">'+rows+'</div></section>';
 }
 function openLesson(id){
@@ -812,7 +878,7 @@ function drawLesson(){
 }
 function finishLesson(btn){
   var rect=btn.getBoundingClientRect();
-  L.done=true;
+  L.done=true; SFX.play("complete"); SFX.buzz(20);
   if(!S.lessons[L.u.id]){ S.lessons[L.u.id]=true; justGrew=L.u.id; L.gained=20; drawLesson(); award(20, rect); }
   else drawLesson();
   if(!reduced) confettiLight();
@@ -823,30 +889,37 @@ function closeLesson(){ L=null; $("#sheet").innerHTML=""; if(tab==="learn") rend
 /* ---------- QUIZ ---------- */
 function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function startQuiz(id){
-  var items=[];
-  if(id==="mix"){ UNITS.forEach(function(u){ u.quiz.forEach(function(q){ items.push({q:q.q,o:q.o,a:q.a,why:q.why,u:u}); }); }); items=shuffle(items).slice(0,5); }
-  else { UNITS.forEach(function(u){ if(u.id===id) u.quiz.forEach(function(q){ items.push({q:q.q,o:q.o,a:q.a,why:q.why,u:u}); }); }); }
-  items = items.map(function(q){ var idx=shuffle([0,1,2,3]); return {q:q.q, o:idx.map(function(i){ return q.o[i]; }), a:idx.indexOf(q.a), why:q.why, u:q.u}; });
-  Q={id:id, items:items, i:0, picked:null, res:[], earned:0, done:false};
+  var pool=[];
+  UNITS.forEach(function(u){ if(id==="mix" || u.id===id) u.quiz.forEach(function(q,i){ pool.push({id:qid(u,i), q:q.q, o:q.o, a:q.a, why:q.why, tf:q.tf, u:u}); }); });
+  /* questions you have not mastered yet come first, so every round teaches something new */
+  var fresh=shuffle(pool.filter(function(q){ return !S.qa[q.id]; })), known=shuffle(pool.filter(function(q){ return S.qa[q.id]; }));
+  var items=shuffle(fresh.concat(known).slice(0, id==="mix" ? QN_MIX : QN_UNIT));
+  items=items.map(function(q){
+    if(q.tf) return {id:q.id, q:q.q, o:q.o, a:q.a, why:q.why, tf:true, u:q.u};
+    var idx=shuffle([0,1,2,3]); return {id:q.id, q:q.q, o:idx.map(function(i){ return q.o[i]; }), a:idx.indexOf(q.a), why:q.why, u:q.u};
+  });
+  Q={id:id, items:items, i:0, picked:null, res:[], earned:0, done:false, combo:0, bestCombo:0, gains:[]};
+  SFX.play("start");
   if(tab!=="quiz") go("quiz"); else { render(); $("#view").scrollTop=0; }
 }
 function renderQuiz(){
   if(Q && Q.done) return quizResult();
   if(Q) return quizQuestion();
   var rows = UNITS.map(function(u){
-    var q=S.quiz[u.id], bars="";
-    for(var k=0;k<5;k++) bars+='<i class="'+(q&&k<q.best?"on":"")+'"></i>';
+    var q=S.quiz[u.id], m=mastered(u), tot=u.quiz.length;
+    var sub = q ? 'Best '+q.best+'/'+(q.of||5)+' · mastered '+m+'/'+tot : QN_UNIT+' questions a round · '+tot+' in this unit';
     return '<button class="qrow" data-act="startQuiz" data-q="'+u.id+'" style="--unit:'+u.color+'">'+
       '<span class="sdg-tile sm"><small>SDG</small><b>'+u.sdg+'</b></span>'+
-      '<span><span class="t" style="display:block">Unit '+u.n+': '+u.title+'</span><span class="s" style="display:block">'+(q?'Best '+q.best+'/5 · taken '+q.taken+(q.taken===1?' time':' times'):'5 questions · not taken yet')+'</span><span class="best" aria-hidden="true">'+bars+'</span></span>'+
+      '<span><span class="t" style="display:block">Unit '+u.n+': '+u.title+'</span><span class="s" style="display:block">'+sub+'</span><span class="mbar" aria-hidden="true"><i style="--w:'+Math.round(m/tot*100)+'%"></i></span></span>'+
       '<span class="unit-end">'+ic("chev")+'</span></button>';
   }).join("");
   var art = UNITS.map(function(u){ return '<span style="background:'+u.color+'">'+u.sdg+'</span>'; }).join("");
+  var mixDone = S.mixDay===today();
   return '<section class="screen">'+
     '<div class="head"><p class="eyebrow">Quiz</p><h1 class="h1">Test what you know</h1></div>'+
-    '<div class="mix"><div><p class="eyebrow">Daily mix</p><h2>5 random questions from all four units</h2><p>A quick round to keep the facts fresh.</p><button class="btn" data-act="startQuiz" data-q="mix">'+ic("shuffle")+'Start the mix</button></div><div class="mix-art" aria-hidden="true">'+art+'</div></div>'+
-    '<div class="rules"><div class="rule"><b>+10</b><span>each correct answer</span></div><div class="rule"><b>+10</b><span>bonus for a perfect 5/5</span></div><div class="rule"><b>+20</b><span>each lesson finished</span></div></div>'+
-    '<div class="sec-head"><h2 class="h2">Unit quizzes</h2><span class="muted smt">20 questions in total</span></div>'+
+    '<div class="mix"><div><p class="eyebrow">Daily mix</p><h2>'+QN_MIX+' questions from every unit</h2><p>'+(mixDone?"Today’s bonus is in the bag. Play again any time for practice.":"Finish today’s mix for a +"+MIX_BONUS+" bonus.")+'</p><button class="btn" data-act="startQuiz" data-q="mix">'+ic("shuffle")+(mixDone?"Play again":"Start the mix")+'</button></div><div class="mix-art" aria-hidden="true">'+art+'</div></div>'+
+    '<div class="rules"><div class="rule"><b>+10</b><span>first time you get a question right</span></div><div class="rule"><b>+10</b><span>first perfect score in a unit</span></div><div class="rule"><b>+'+MIX_BONUS+'</b><span>daily mix, once a day</span></div></div>'+
+    '<div class="sec-head"><h2 class="h2">Unit quizzes</h2><span class="muted smt">'+masteredAll()+' of '+totalQs()+' mastered</span></div>'+
     '<div class="units">'+rows+'</div></section>';
 }
 function quizQuestion(){
@@ -859,8 +932,10 @@ function quizQuestion(){
   }).join("");
   var fb="";
   if(picked!==null){
-    var ok=picked===it.a;
-    fb = '<div class="feedback '+(ok?"ok":"no")+'" role="status"><div class="fb-h">'+ic(ok?"check":"x")+(ok?"Correct · +10 points":"Not quite")+'</div><p>'+it.why+'</p>'+
+    var ok=picked===it.a, g=Q.gains[Q.i];
+    fb = '<div class="feedback '+(ok?"ok":"no")+'" role="status"><div class="fb-h">'+ic(ok?"check":"x")+(ok?"Correct":"Not quite")+(ok?'<span class="fb-tag">'+(g?"+"+g+" points":"Already mastered")+'</span>':'')+'</div>'+
+      (ok && Q.combo>=3 ? '<span class="combo">'+ic("flame")+Q.combo+' in a row</span>' : '')+
+      (!ok ? '<p><strong>Answer: '+it.o[it.a]+'.</strong></p>' : '')+'<p>'+it.why+'</p>'+
       '<button class="btn block" data-act="nextQ">'+(Q.i===n-1?"See my score":"Next question")+ic("arrow")+'</button></div>';
   }
   return '<section class="screen" style="--unit:'+it.u.color+'">'+
@@ -872,39 +947,54 @@ function quizResult(){
   var n=Q.items.length, sc=Q.res.filter(Boolean).length, pct=Math.round(sc/n*100);
   var unit = Q.id==="mix" ? null : Q.items[0].u;
   var color = unit ? unit.color : "var(--accent)";
-  var head = sc===n ? "Perfect score!" : (sc>=3 ? "Nicely done" : "Keep growing");
-  var sub = sc===n ? "Every answer right. That earns a 10-point bonus." : (sc>=3 ? "Review the ones you missed and try again for 5/5." : "Read the lesson again, then have another go.");
-  var recap = Q.items.map(function(it,i){ return '<li class="'+(Q.res[i]?"y":"n")+'">'+ic(Q.res[i]?"check":"x")+'<span>'+it.q+'</span></li>'; }).join("");
+  var perfect = sc===n;
+  var head = perfect ? "Perfect score!" : (pct>=60 ? "Nicely done" : "Keep growing");
+  var sub = perfect ? (Q.firstPerfect ? "Every answer right. Your first perfect score here earns a +10 bonus." : "Every answer right. Your knowledge is growing strong.")
+                    : (pct>=60 ? "Check the answers you missed below, then go again." : "Read the lesson again, then have another go.");
+  var recap = Q.items.map(function(it,i){ return '<li class="'+(Q.res[i]?"y":"n")+'">'+ic(Q.res[i]?"check":"x")+'<span>'+it.q+(Q.res[i]?'':'<small>Answer: <b>'+it.o[it.a]+'</b></small>')+'</span></li>'; }).join("");
   var lessonBtn = (unit && !S.lessons[unit.id]) ? '<button class="btn ghost" data-act="lesson" data-u="'+unit.id+'">Read the Unit '+unit.n+' lesson</button>' : '';
+  var chips = '<span class="chip sun">'+ic("star")+'+'+Q.earned+' points</span>';
+  if(Q.mixBonus) chips += '<span class="chip good">'+ic("check")+'Daily bonus +'+MIX_BONUS+'</span>';
+  if(Q.bestCombo>=3) chips += '<span class="chip">'+ic("flame")+'Best streak '+Q.bestCombo+'</span>';
+  if(unit) chips += '<span class="chip">Mastered '+mastered(unit)+'/'+unit.quiz.length+'</span>';
   return '<section class="screen result" style="--unit:'+color+'">'+
     '<p class="eyebrow">'+(unit?'Unit '+unit.n+' quiz':'Daily mix')+'</p>'+
     '<div class="ring" id="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50" pathLength="100" stroke-dasharray="'+pct+' 100"/></svg>'+
     '<div class="ring-c"><b>'+sc+'/'+n+'</b><span>correct</span></div></div>'+
     '<h1 class="h1">'+head+'</h1><p class="muted">'+sub+'</p>'+
-    '<div class="chips"><span class="chip sun">'+ic("star")+'+'+Q.earned+' points</span>'+(unit&&S.quiz[unit.id]?'<span class="chip">Best '+S.quiz[unit.id].best+'/5</span>':'')+'</div>'+
+    '<div class="chips">'+chips+'</div>'+
     '<div class="recap"><ul>'+recap+'</ul></div>'+
-    '<div class="acts"><button class="btn" data-act="startQuiz" data-q="'+Q.id+'">Try again</button>'+lessonBtn+'<button class="btn ghost" data-act="quizHome">All quizzes</button></div></section>';
+    '<div class="acts"><button class="btn" data-act="startQuiz" data-q="'+Q.id+'">New round</button>'+lessonBtn+'<button class="btn ghost" data-act="quizHome">All quizzes</button></div></section>';
 }
 function pick(i, btn){
   if(!Q || Q.picked!==null) return;
-  var it=Q.items[Q.i], ok=i===it.a, rect=btn.getBoundingClientRect();
+  var it=Q.items[Q.i], ok=i===it.a, rect=btn.getBoundingClientRect(), gain=0;
   Q.picked=i; Q.res.push(ok);
+  if(ok){ Q.combo++; Q.bestCombo=Math.max(Q.bestCombo,Q.combo); if(!S.qa[it.id]){ S.qa[it.id]=today(); gain=10; } }
+  else Q.combo=0;
+  Q.gains[Q.i]=gain;
   render();
   var nb=$('.opt[data-i="'+i+'"]'); if(nb) nb.classList.add(ok?"pulse":"shake");
-  if(ok){ Q.earned+=10; award(10, rect); }
+  if(ok){ SFX.play("correct", Q.combo); SFX.buzz(12); } else { SFX.play("wrong"); SFX.buzz([30,50,30]); }
+  if(gain){ Q.earned+=gain; award(gain, rect); } else save();
   var fb=$(".feedback"); if(fb && fb.scrollIntoView) fb.scrollIntoView({block:"nearest", behavior: reduced?"auto":"smooth"});
 }
 function nextQ(){
   Q.i++; Q.picked=null;
   if(Q.i>=Q.items.length){
     Q.done=true;
-    var sc=Q.res.filter(Boolean).length, n=Q.items.length, prev=S.quiz[Q.id];
-    S.quiz[Q.id]={best:Math.max(prev?prev.best:0, sc), taken:(prev?prev.taken:0)+1};
-    var perfect = sc===n; if(perfect) Q.earned+=10;
+    var sc=Q.res.filter(Boolean).length, n=Q.items.length, prev=S.quiz[Q.id], bonus=0;
+    S.quiz[Q.id]={best:(prev && (prev.of||5)===n) ? Math.max(prev.best, sc) : sc, of:n, taken:(prev?prev.taken:0)+1};
+    var perfect = sc===n;
+    if(perfect && Q.id!=="mix" && !S.perfect[Q.id]){ S.perfect[Q.id]=today(); Q.firstPerfect=true; bonus+=10; }
+    if(Q.id==="mix" && S.mixDay!==today()){ S.mixDay=today(); Q.mixBonus=true; bonus+=MIX_BONUS; }
+    Q.earned+=bonus;
     save(); render(); $("#view").scrollTop=0;
-    if(perfect){ var r=$("#ring"); award(10, r ? r.getBoundingClientRect() : null); }
+    SFX.play(perfect ? "perfect" : "done");
+    if(perfect) confetti();
+    if(bonus){ var r=$("#ring"); setTimeout(function(){ award(bonus, r ? r.getBoundingClientRect() : null); }, 350); }
     else { touch(); save(); renderHeader(false); setTimeout(checkBadges, 300); }
-  } else { render(); $("#view").scrollTop=0; }
+  } else { SFX.play("tap"); render(); $("#view").scrollTop=0; }
 }
 
 /* ---------- BADGES ---------- */
@@ -929,14 +1019,14 @@ function renderBadges(){
     '<div class="sec-head"><h2 class="h2">Badges</h2><span class="muted smt">'+earned+' of '+BADGES.length+' earned</span></div>'+
     '<div class="bgrid">'+cards+'</div>'+
     '<div class="sec-head"><h2 class="h2">How to earn points</h2></div>'+
-    '<div class="rules"><div class="rule"><b>+20</b><span>finish a lesson</span></div><div class="rule"><b>+10</b><span>correct answer</span></div><div class="rule"><b>+15</b><span>eco-action check-in</span></div></div></section>';
+    '<div class="rules"><div class="rule"><b>+20</b><span>finish a lesson</span></div><div class="rule"><b>+10</b><span>new correct answer</span></div><div class="rule"><b>+15</b><span>eco-action check-in</span></div></div></section>';
 }
 
 /* ---------- CHALLENGES ---------- */
 function renderChallenges(){
   var days=weekDays(), t=today(), wc=weekCheckins();
   var doneToday = CHALLENGES.filter(function(c){ return checked(c.id,t); }).length;
-  var comm = C.on ? (C.community==null ? wc : Math.max(C.community, wc)) : COMMUNITY_BASE + wc, cw = Math.min(100, Math.round(comm/COMMUNITY_GOAL*100));
+  var comm = C.on ? (C.community==null ? wc : Math.max(C.community, wc)) : wc, cw = Math.min(100, Math.round(comm/COMMUNITY_GOAL*100));
   var list = CHALLENGES.map(function(c){
     var dn=checked(c.id,t), pts=15+(c.feat?5:0);
     var dots = days.map(function(d,k){ var key=dkey(d); return '<span class="dot'+(checked(c.id,key)?" on":"")+(key===t?" today":"")+(key>t?" future":"")+'" title="'+d.toLocaleDateString("en-GB",{weekday:"long"})+'">'+"MTWTFSS"[k]+'</span>'; }).join("");
@@ -952,7 +1042,7 @@ function renderChallenges(){
     '<div class="head"><p class="eyebrow">Eco-action challenges</p><h1 class="h1">Small actions, every week</h1></div>'+
     '<div class="wk"><p class="eyebrow">This week · '+fmtDay(days[0])+' to '+fmtDay(days[6])+'</p>'+
     '<div class="wk-stats"><div class="wk-stat"><b>'+wc+'</b><span>your check-ins this week</span></div><div class="wk-stat"><b>'+doneToday+'/5</b><span>actions done today</span></div></div>'+
-    '<div class="goal"><div class="goal-l"><span>'+(C.on?"Everyone on EcoLingo this week":"All testers this week (sample)")+'</span><b id="commN">'+comm+' / '+COMMUNITY_GOAL+'</b></div><div class="bar"><i id="commBar" style="--w:'+cw+'%"></i></div></div></div>'+
+    '<div class="goal"><div class="goal-l"><span>'+"Everyone on EcoLingo this week"+'</span><b id="commN">'+comm+' / '+COMMUNITY_GOAL+'</b></div><div class="bar"><i id="commBar" style="--w:'+cw+'%"></i></div></div></div>'+
     '<div class="chals">'+list+'</div>'+
     '<p class="fine">Check in once per action per day. EcoLingo trusts you, there is no photo proof.</p></section>';
 }
@@ -961,6 +1051,7 @@ function checkin(id, btn){
   var c=null; CHALLENGES.forEach(function(x){ if(x.id===id) c=x; });
   var rect=btn.getBoundingClientRect();
   S.checkins.push({c:id,d:t});
+  SFX.play("stamp"); SFX.buzz(25);
   award(15+(c&&c.feat?5:0), rect);
   render();
   var card=$('.chal[data-c="'+id+'"]'); if(card) card.classList.add("stamped");
@@ -985,19 +1076,22 @@ function renderBoard(){
     '<div class="me-card"><b>#'+(me+1)+'</b><p><strong>'+esc(S.nick)+'</strong> · '+rows[me].pts+' pts<br><span class="muted">'+msg+'</span></p></div>'+
     '<div class="podium">'+pod+'</div>'+
     '<div class="rows">'+list+'</div>'+
-    '<p class="fine">'+(C.on?(C.board[boardMode]?"Live ranks from everyone on EcoLingo.":"Loading live ranks…")+" Points are for fun and carry no real prizes.":"Other players are sample nicknames for this prototype. Points are for fun and carry no real prizes.")+'</p></section>';
+    '<p class="fine">'+(C.on?(C.board[boardMode]?"Live ranks from everyone on EcoLingo.":"Loading live ranks…"):"Go online to see live ranks.")+" Points are for fun and carry no real prizes."+'</p></section>';
 }
 
 /* ---------- profile ---------- */
 function openProfile(){
   $("#sheet").innerHTML = '<div class="scrim" data-act="closeSheet"></div><div class="bsheet" role="dialog" aria-modal="true" aria-labelledby="pf-t">'+
-    '<div class="grabber"></div><h2 id="pf-t" class="h2">Your nickname</h2>'+
-    '<p class="note">'+(C.on?"Your nickname is shown on the leaderboard. Progress is saved to the cloud automatically.":"EcoLingo only asks for a nickname. No account, no login, and your progress stays in this browser.")+'</p>'+
+    '<div class="grabber"></div><h2 id="pf-t" class="h2">Your profile</h2>'+
+    '<p class="note">Your nickname is shown on the leaderboard.'+(C.on?" Progress is saved to the cloud automatically.":" Progress is saved on this device.")+'</p>'+
     '<form id="nickForm" class="nick-row"><label class="sr" for="nick">Nickname</label><input id="nick" maxlength="16" autocomplete="off" value="'+esc(S.nick)+'"><button class="btn" type="submit">Save</button></form>'+
     (C.on?'<div class="divider"></div><p class="eyebrow">Account and sync</p><div class="acct" id="acct">'+acctHTML()+'</div>':'')+
-    '<div class="divider"></div><p class="eyebrow">'+(C.on?"Reset":"Prototype controls")+'</p>'+
-    '<div class="ctl-row">'+(C.on?'':'<button class="btn ghost" data-act="reset" data-mode="sample">Load sample progress</button>')+'<button class="btn ghost" data-act="reset" data-mode="zero">Start from zero</button></div>'+
-    '<p class="note" id="resetNote">'+(C.on?"Clears your points, badges and check-ins on every device you use.":"Use these to reset the demo before a test session.")+'</p></div>';
+    '<div class="divider"></div><p class="eyebrow">App</p>'+
+    '<div class="setrow"><div><b>Sound and vibration</b><span>Effects for answers, points and badges</span></div><button class="switch" role="switch" aria-label="Sound and vibration" aria-checked="'+SFX.isOn()+'" data-act="sound"><i></i></button></div>'+
+    installHTML(true)+
+    '<div class="divider"></div><p class="eyebrow">Reset</p>'+
+    '<div class="ctl-row"><button class="btn ghost" data-act="reset" data-mode="zero">Start from zero</button></div>'+
+    '<p class="note" id="resetNote">'+(C.on?"Clears your points, badges and check-ins on every device you use.":"Clears your points, badges and check-ins.")+'</p></div>';
 }
 function closeSheet(){ $("#sheet").innerHTML=""; L=null; }
 
@@ -1005,8 +1099,10 @@ function closeSheet(){ $("#sheet").innerHTML=""; L=null; }
 var ACT = {
   tab:function(el){ if(L) closeLesson(); go(el.dataset.tab); },
   lesson:function(el){ openLesson(el.dataset.u); },
-  lessonNext:function(el){ if(L.i<L.u.cards.length-1){ L.i++; L.dir=1; drawLesson(); } else finishLesson(el); },
-  lessonPrev:function(){ if(L.i>0){ L.i--; L.dir=-1; drawLesson(); } },
+  lessonNext:function(el){ if(L.i<L.u.cards.length-1){ L.i++; L.dir=1; SFX.play("flip"); drawLesson(); } else finishLesson(el); },
+  lessonPrev:function(){ if(L.i>0){ L.i--; L.dir=-1; SFX.play("flip"); drawLesson(); } },
+  sound:function(el){ SFX.set(!SFX.isOn()); el.setAttribute("aria-checked", String(SFX.isOn())); if(SFX.isOn()){ SFX.play("correct"); SFX.buzz(15); } },
+  install:function(){ installApp(); },
   closeLesson:function(){ closeLesson(); },
   quizFromLesson:function(){ var id=L.u.id; L=null; $("#sheet").innerHTML=""; startQuiz(id); },
   startQuiz:function(el){ startQuiz(el.dataset.q); },
@@ -1022,17 +1118,20 @@ var ACT = {
   signOut:function(){ signOut(); },
   badgeOk:function(){ $("#modal").innerHTML=""; if(badgeQ.length) setTimeout(showBadge, 150); },
   reset:function(el){
-    if(el.dataset.armed!=="1"){ $$('[data-act="reset"]').forEach(function(b){ b.dataset.armed="0"; b.textContent = b.dataset.mode==="sample"?"Load sample progress":"Start from zero"; });
+    if(el.dataset.armed!=="1"){
       el.dataset.armed="1"; el.textContent="Tap again to confirm"; $("#resetNote").textContent="This replaces your current points, badges and check-ins."; return; }
-    var nick=S.nick; S = el.dataset.mode==="sample" ? sampleState() : zeroState(nick); S.nick=nick;
-    save(); Q=null; closeSheet(); shownPts=null; renderHeader(false); firstPaint=true; go(tab); toast(el.dataset.mode==="sample"?"Sample progress loaded":"Progress cleared");
+    var nick=S.nick; S = zeroState(nick); S.onb=true;
+    save(); Q=null; closeSheet(); shownPts=null; renderHeader(false); firstPaint=true; go(tab); toast("Progress cleared");
   }
 };
+var TAP_ACTS={tab:1, board:1, profile:1, lesson:1, closeSheet:1, closeLesson:1, quitQuiz:1, quizHome:1, badgeOk:1, otpBack:1};
 document.addEventListener("click", function(e){
   var el=e.target.closest("[data-act]"); if(!el || el.disabled) return;
+  if(TAP_ACTS[el.dataset.act]) SFX.play("tap");
   var f=ACT[el.dataset.act]; if(f){ e.preventDefault(); f(el,e); }
 });
 document.addEventListener("submit", function(e){
+  if(e.target.id==="welForm"){ e.preventDefault(); finishWelcome(); return; }
   if(e.target.id==="emailForm"){ e.preventDefault(); sendCode($("#email").value); return; }
   if(e.target.id==="otpForm"){ e.preventDefault(); verifyCode($("#otp").value); return; }
   if(e.target.id!=="nickForm") return; e.preventDefault();
@@ -1088,7 +1187,13 @@ function mergeState(a, b){
   var m=zeroState(a.nick||b.nick), k;
   [a,b].forEach(function(s){
     for(k in (s.lessons||{})) if(s.lessons[k]) m.lessons[k]=true;
-    for(k in (s.quiz||{})){ var q=s.quiz[k], p=m.quiz[k]; m.quiz[k]={best:Math.max(p?p.best:0,q.best||0), taken:Math.max(p?p.taken:0,q.taken||0)}; }
+    for(k in (s.quiz||{})){ var q=s.quiz[k], p=m.quiz[k], qo=q.of||5;
+      if(!p || qo>(p.of||5)) m.quiz[k]={best:q.best||0, of:qo, taken:Math.max(p?p.taken:0,q.taken||0)};
+      else m.quiz[k]={best:(qo===(p.of||5))?Math.max(p.best,q.best||0):p.best, of:p.of||5, taken:Math.max(p.taken,q.taken||0)}; }
+    for(k in (s.qa||{})) if(s.qa[k] && (!m.qa[k] || s.qa[k]<m.qa[k])) m.qa[k]=s.qa[k];
+    for(k in (s.perfect||{})) if(!m.perfect[k] || s.perfect[k]<m.perfect[k]) m.perfect[k]=s.perfect[k];
+    if((s.mixDay||"")>m.mixDay) m.mixDay=s.mixDay;
+    if(s.onb) m.onb=true;
     for(k in (s.badges||{})) if(!m.badges[k] || s.badges[k]<m.badges[k]) m.badges[k]=s.badges[k];
   });
   var seen={}; a.checkins.concat(b.checkins).forEach(function(x){ var id=x.c+"|"+x.d; if(!seen[id]){ seen[id]=1; m.checkins.push({c:x.c,d:x.d}); } });
@@ -1105,7 +1210,7 @@ function adoptUser(user){
     if(C.uid!==user.id) return;
     if(r.error) throw r.error;
     if(r.data && r.data.state && r.data.state.v===1){
-      var before=JSON.stringify(S), m=mergeState(r.data.state, S);
+      var before=JSON.stringify(S), m=mergeState(norm(r.data.state), S);
       m.nick = r.data.nick || m.nick;
       if(JSON.stringify(m)!==before){ S=m; persistLocal(); shownPts=null; renderHeader(false); if(!Q && !L) render(); var ni=$("#nick"); if(ni && document.activeElement!==ni) ni.value=S.nick; }
     }
@@ -1198,6 +1303,103 @@ function cloudBoot(){
   window.addEventListener("online", function(){ if(C.uid) cloudSave(); });
 }
 
+/* ---------- sound + haptics (synthesised, no audio files) ---------- */
+var SFX=(function(){
+  var KEY_S="ecolingo-sound", on=true, ctx=null, out=null, noise=null;
+  try{ on = localStorage.getItem(KEY_S)!=="off"; }catch(e){}
+  function ac(){
+    if(!ctx){
+      var A=window.AudioContext||window.webkitAudioContext; if(!A) return null;
+      try{ ctx=new A(); }catch(e){ return null; }
+      var comp=ctx.createDynamicsCompressor(); out=ctx.createGain(); out.gain.value=0.6; out.connect(comp); comp.connect(ctx.destination);
+    }
+    if(ctx.state==="suspended" && ctx.resume) ctx.resume();
+    return ctx;
+  }
+  function tone(f, t, d, o){
+    o=o||{}; var s=ctx.currentTime+t, osc=ctx.createOscillator(), g=ctx.createGain(), v=o.vol||0.15;
+    osc.type=o.type||"sine"; osc.frequency.setValueAtTime(f, s); if(o.to) osc.frequency.exponentialRampToValueAtTime(o.to, s+d);
+    g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(v, s+(o.atk||0.008)); g.gain.exponentialRampToValueAtTime(0.0001, s+d);
+    osc.connect(g); g.connect(out); osc.start(s); osc.stop(s+d+0.05);
+  }
+  function hiss(t, d, o){
+    o=o||{};
+    if(!noise){ noise=ctx.createBuffer(1, Math.floor(ctx.sampleRate*0.5), ctx.sampleRate); var ch=noise.getChannelData(0); for(var i=0;i<ch.length;i++) ch[i]=Math.random()*2-1; }
+    var s=ctx.currentTime+t, src=ctx.createBufferSource(), f=ctx.createBiquadFilter(), g=ctx.createGain();
+    src.buffer=noise; f.type=o.filter||"bandpass"; f.frequency.setValueAtTime(o.f||1200, s); if(o.fto) f.frequency.exponentialRampToValueAtTime(o.fto, s+d); f.Q.value=o.q||1;
+    g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(o.vol||0.1, s+0.01); g.gain.exponentialRampToValueAtTime(0.0001, s+d);
+    src.connect(f); f.connect(g); g.connect(out); src.start(s); src.stop(s+d+0.05);
+  }
+  var C4=261.63, E4=329.63, G4=392, C5=523.25, D5=587.33, E5=659.25, G5=783.99, A5=880, C6=1046.5, E6=1318.5, G6=1568;
+  function arp(notes, gap, d, o){ notes.forEach(function(f,i){ tone(f, i*gap, d, o); }); }
+  var lib={
+    tap:function(){ tone(900,0,.05,{type:"triangle",vol:.05,to:700}); },
+    flip:function(){ hiss(0,.18,{f:700,fto:3000,vol:.06,q:.7}); },
+    start:function(){ tone(G4,0,.12,{type:"triangle",vol:.09}); tone(C5,.08,.2,{type:"triangle",vol:.11}); },
+    correct:function(k){ var m=Math.pow(1.0595, Math.min(k||1,8)-1); tone(E5*m,0,.14,{vol:.15}); tone(A5*m,.08,.28,{vol:.15}); tone(E6*m,.16,.24,{vol:.04}); },
+    wrong:function(){ tone(196,0,.22,{type:"triangle",vol:.14,to:150}); tone(147,.11,.28,{type:"triangle",vol:.11,to:110}); },
+    coin:function(){ tone(C6,0,.07,{type:"square",vol:.03}); tone(G6,.06,.18,{type:"square",vol:.03}); },
+    stamp:function(){ hiss(0,.1,{filter:"lowpass",f:500,vol:.22}); tone(120,0,.14,{vol:.2,to:55}); tone(C5,.1,.14,{vol:.09}); tone(G5,.18,.26,{vol:.09}); },
+    complete:function(){ arp([C5,E5,G5],.09,.24,{type:"triangle",vol:.11}); tone(C6,.27,.45,{vol:.11}); },
+    done:function(){ tone(G4,0,.18,{type:"triangle",vol:.1}); tone(C5,.13,.34,{type:"triangle",vol:.1}); },
+    perfect:function(){ arp([C5,E5,G5,C6],.08,.22,{type:"triangle",vol:.11}); arp([E6,G6],.06,.4,{vol:.04}); },
+    badge:function(){ arp([G4,C5,E5,G5,C6],.07,.26,{type:"triangle",vol:.1}); tone(C6,.38,.7,{vol:.07}); tone(E6,.38,.6,{vol:.04}); },
+    levelup:function(){ [C4,E4,G4].forEach(function(f){ tone(f*2,0,.22,{type:"triangle",vol:.07}); }); [D5,G5,A5*1.0].forEach(function(f){ tone(f,.18,.22,{type:"triangle",vol:.06}); }); [C5,E5,G5,C6].forEach(function(f){ tone(f,.38,.8,{type:"triangle",vol:.07}); }); tone(G6,.42,.6,{vol:.03}); }
+  };
+  return {
+    play:function(n,a){ if(!on || !lib[n] || !ac()) return; try{ lib[n](a); }catch(e){} },
+    buzz:function(p){ if(on && navigator.vibrate){ try{ navigator.vibrate(p); }catch(e){} } },
+    isOn:function(){ return on; },
+    set:function(v){ on=!!v; try{ localStorage.setItem(KEY_S, on?"on":"off"); }catch(e){} }
+  };
+})();
+
+/* ---------- install as an app (PWA) ---------- */
+var installEvt=null;
+var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+function isStandalone(){ return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone===true; }
+function installHTML(inSheet){
+  if(isStandalone()) return '';
+  if(installEvt) return (inSheet?'':'')+'<div class="setrow"><div><b>Install EcoLingo</b><span>Open it from your home screen like any app, even offline</span></div><button class="btn sm" data-act="install">Install</button></div>';
+  if(isIOS) return '<div class="setrow"><div><b>Add to Home Screen</b><span>In Safari, tap Share, then “Add to Home Screen”</span></div></div>';
+  return inSheet ? '' : '<div class="setrow"><div><b>Get the app</b><span>Open this page on your phone and choose “Add to Home Screen” or “Install app”.</span></div></div>';
+}
+function renderGetApp(){
+  var el=$("#getApp"); if(!el) return;
+  if(isStandalone()){ el.style.display="none"; return; }
+  el.innerHTML='<p class="eyebrow">Get the app</p>'+(installEvt
+    ? '<p>Install EcoLingo for one-tap access and offline lessons.</p><button class="btn sm" data-act="install">'+ic("arrow")+'Install EcoLingo</button>'
+    : '<p>On your phone, open this page and choose “Add to Home Screen” (iPhone) or “Install app” (Android). It works offline too.</p>');
+}
+function installApp(){
+  if(!installEvt) return;
+  installEvt.prompt();
+  installEvt.userChoice.then(function(c){ if(c && c.outcome==="accepted"){ toast("Installing EcoLingo…"); } installEvt=null; renderGetApp(); });
+}
+window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); installEvt=e; renderGetApp(); });
+window.addEventListener("appinstalled", function(){ installEvt=null; renderGetApp(); toast("EcoLingo installed"); });
+
+/* ---------- first-run welcome ---------- */
+function maybeWelcome(){
+  if(S.onb) return;
+  if(totalPts()>0 || lessonsDone()>0){ S.onb=true; save(); return; }
+  if($("#sheet").innerHTML || $("#modal").innerHTML || Q) return;
+  var feats=[["learn","#19486A","<b>"+UNITS.length+" short units</b> that grow your SDG plant"],["quiz","#C5192D","<b>"+totalQs()+" quiz questions</b> with instant explanations"],["leaf","#3F7E44","<b>Weekly eco-actions</b> and a live leaderboard"]];
+  $("#sheet").innerHTML='<div class="scrim"></div><div class="bsheet welcome" role="dialog" aria-modal="true" aria-labelledby="wel-t">'+
+    '<span class="wel-mark">'+ic("sprout")+'</span><h2 id="wel-t">Welcome to EcoLingo</h2>'+
+    '<p class="note">Learn the UN Sustainable Development Goals in two-minute lessons and turn them into everyday habits.</p>'+
+    '<ul class="wel-list">'+feats.map(function(f){ return '<li><span class="ico" style="background:'+f[1]+'">'+ic(f[0])+'</span><span>'+f[2]+'</span></li>'; }).join("")+'</ul>'+
+    '<form id="welForm" class="nick-row"><label class="sr" for="welNick">Nickname</label><input id="welNick" maxlength="16" autocomplete="off" placeholder="Pick a nickname"><button class="btn" type="submit">Let’s go</button></form>'+
+    '<p class="fine">Your nickname appears on the leaderboard. You can change it any time.</p></div>';
+}
+function finishWelcome(){
+  var v=($("#welNick").value||"").trim().replace(/\s+/g," ").slice(0,16);
+  if(v) S.nick=v;
+  S.onb=true; save(); renderHeader(false); closeSheet(); render();
+  SFX.play("complete"); SFX.buzz(20);
+  toast("Welcome, "+S.nick+"!");
+}
+
 /* ---------- boot ---------- */
 if(C.on) cloudBoot();
 if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
@@ -1207,7 +1409,9 @@ fillStaticIcons();
 renderHeader(false);
 var h=(location.hash||"").replace("#","");
 go(TABS.indexOf(h)>=0 ? h : "learn");
+renderGetApp();
 setTimeout(checkBadges, 1200);
+setTimeout(maybeWelcome, C.on ? 1500 : 600);
 })();
 </script>
 
