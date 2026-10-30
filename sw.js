@@ -1,6 +1,6 @@
 // EcoLingo service worker: lets the app open offline and be installed to the home screen.
 // Bump VERSION whenever you deploy big changes so phones pick up the new files.
-var VERSION = "ecolingo-v2";
+var VERSION = "ecolingo-v3";
 var CORE = ["./", "index.html", "config.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", function (e) {

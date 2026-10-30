@@ -1313,9 +1313,18 @@ var SFX=(function(){
       try{ ctx=new A(); }catch(e){ return null; }
       var comp=ctx.createDynamicsCompressor(); out=ctx.createGain(); out.gain.value=0.6; out.connect(comp); comp.connect(ctx.destination);
     }
-    if(ctx.state==="suspended" && ctx.resume) ctx.resume();
+    if(ctx.state!=="running" && ctx.resume){ try{ ctx.resume(); }catch(e){} }
     return ctx;
   }
+  /* iPhone/iPad only allow audio after it is started inside a touch: unlock on the first tap */
+  function unlock(){
+    if(!on) return;
+    var c=ac(); if(!c) return;
+    try{ var b=c.createBuffer(1,1,22050), src=c.createBufferSource(); src.buffer=b; src.connect(c.destination); src.start(0); }catch(e){}
+    if(c.state==="running"){ ["touchend","pointerdown","keydown","click"].forEach(function(t){ document.removeEventListener(t, unlock, true); }); }
+  }
+  ["touchend","pointerdown","keydown","click"].forEach(function(t){ document.addEventListener(t, unlock, true); });
+  document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="visible" && ctx && ctx.state!=="running" && ctx.resume){ try{ ctx.resume(); }catch(e){} } });
   function tone(f, t, d, o){
     o=o||{}; var s=ctx.currentTime+t, osc=ctx.createOscillator(), g=ctx.createGain(), v=o.vol||0.15;
     osc.type=o.type||"sine"; osc.frequency.setValueAtTime(f, s); if(o.to) osc.frequency.exponentialRampToValueAtTime(o.to, s+d);
