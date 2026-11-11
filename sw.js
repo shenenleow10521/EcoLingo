@@ -1,45 +1,47 @@
-// EcoLingo service worker: lets the app open offline and be installed to the home screen.
-// Bump VERSION whenever you deploy big changes so phones pick up the new files.
-var VERSION = "ecolingo-v3";
-var CORE = ["./", "index.html", "config.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png"];
+// EcoLingo service worker: network-first app shell with offline lessons and quizzes.
+const VERSION = "ecolingo-v4";
+const CORE = ["./", "index.html", "app.html", "landing.css", "landing.js", "workspace.css",
+  "assets/rainforest.webp", "config.js", "manifest.webmanifest", "icons/icon.svg",
+  "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png"];
 
-self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(CORE); }).then(function () { return self.skipWaiting(); }));
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(CORE)).then(() => self.skipWaiting()));
 });
 
-self.addEventListener("activate", function (e) {
-  e.waitUntil(caches.keys().then(function (keys) {
-    return Promise.all(keys.filter(function (k) { return k !== VERSION; }).map(function (k) { return caches.delete(k); }));
-  }).then(function () { return self.clients.claim(); }));
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.keys()
+    .then((keys) => Promise.all(keys.filter((key) => key.startsWith("ecolingo-") && key !== VERSION).map((key) => caches.delete(key))))
+    .then(() => self.clients.claim()));
 });
 
-self.addEventListener("fetch", function (e) {
-  var req = e.request;
-  if (req.method !== "GET") return;
-  var url = new URL(req.url);
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
 
-  // Never cache the backend (Supabase API / auth): always live.
-  if (url.hostname.endsWith(".supabase.co") || url.hostname.endsWith(".supabase.in")) return;
-
-  // Our own files: network first (so updates show up), fall back to cache when offline.
   if (url.origin === self.location.origin) {
-    e.respondWith(fetch(req).then(function (res) {
-      var copy = res.clone();
-      if (res.ok) caches.open(VERSION).then(function (c) { c.put(req, copy); });
-      return res;
-    }).catch(function () {
-      return caches.match(req).then(function (hit) { return hit || caches.match("index.html"); });
+    if (["code", "error", "error_code", "error_description"].some((key) => url.searchParams.has(key))) return;
+    const cacheKey = request.mode === "navigate" ? url.origin + url.pathname : request;
+    event.respondWith(caches.open(VERSION).then(async (cache) => {
+      try {
+        const response = await fetch(request);
+        if (response.ok) await cache.put(cacheKey, response.clone()).catch(() => {});
+        return response;
+      } catch {
+        const cached = await cache.match(cacheKey);
+        return cached || Response.error();
+      }
     }));
     return;
   }
 
-  // Fonts and the supabase-js library from CDNs: cache first, refresh in background.
   if (/(^|\.)(fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net)$/.test(url.hostname)) {
-    e.respondWith(caches.open(VERSION).then(function (c) {
-      return c.match(req).then(function (hit) {
-        var net = fetch(req).then(function (res) { if (res.ok || res.type === "opaque") c.put(req, res.clone()); return res; }).catch(function () { return hit; });
-        return hit || net;
-      });
+    event.respondWith(caches.open(VERSION).then(async (cache) => {
+      const cached = await cache.match(request);
+      if (cached) return cached;
+      const response = await fetch(request);
+      if (response.ok || response.type === "opaque") await cache.put(request, response.clone()).catch(() => {});
+      return response;
     }));
   }
 });

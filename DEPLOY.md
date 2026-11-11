@@ -161,13 +161,13 @@ git push
 
 | 文件 | 作用 |
 |---|---|
-| `index.html` | 加了 Supabase 连接、云端同步、真排行榜、email 登录、PWA 注册。`config.js` 留空时行为跟原本原型一样 |
+| `app.html` | Supabase 连接、云端同步、排行榜、email 登录、PWA 注册。`config.js` 留空时行为跟原本原型一样 |
 | `config.js` | 填 Supabase URL + publishable key |
 | `supabase/schema.sql` | 数据库表、RLS 安全规则、排行榜/社区函数 |
 | `manifest.webmanifest` + `icons/` | PWA：名称、颜色、图标 |
 | `sw.js` | Service worker：离线打开、加速 |
 
-主要逻辑都在 `index.html` 里 `/* ---------- cloud sync ---------- */` 那一段，可以读一读：
+主要逻辑都在 `app.html` 里 `/* ---------- cloud sync ---------- */` 那一段，可以读一读：
 
 - `cloudSave()` — 把进度 upsert 进 `profiles`
 - `adoptUser()` — 登录后从云端拿进度，跟本机进度合并
@@ -188,3 +188,10 @@ git push
    ```
 5. **上 Play Store**：用 <https://www.pwabuilder.com> 输入你的网址，可以直接打包成 Android app（TWA）；或用 Capacitor 包成原生 app。
 6. **UM 账号登录**：Supabase 也支持 Google / Microsoft 登录（Authentication → Providers），可以限制只有 `@siswa.um.edu.my` 能玩。
+
+## 11. 电脑版学生测试
+
+- 首页输入名字或昵称，再点 **Play as guest**。游客可直接使用学习、测验、徽章、挑战和排行榜。
+- 用侧栏的 **Switch player** 返回首页，下一位学生输入名字后会从零开始。重新加载当前标签页会保留当前游客进度。
+- 游客的显示名字和分数会出现在启用 Supabase 的排行榜。需要跨设备同步时，从首页点 **Sign in**，使用已有的邮箱登录。
+- `app.html` 是原有的手机安装版入口。旧书签和邮箱回调仍可从首页进入。
