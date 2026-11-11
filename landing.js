@@ -62,25 +62,6 @@ if ("IntersectionObserver" in window && !reducedMotion.matches) {
   });
 }
 
-if (!reducedMotion.matches && matchMedia("(pointer: fine)").matches) {
-  const hero = document.querySelector(".hero");
-  const photo = document.querySelector(".hero-photo");
-  let frame = 0;
-  hero.addEventListener("pointermove", (event) => {
-    cancelAnimationFrame(frame);
-    frame = requestAnimationFrame(() => {
-      const bounds = hero.getBoundingClientRect();
-      photo.style.setProperty("--move-x", ((event.clientX - bounds.left) / bounds.width - 0.5) * -16 + "px");
-      photo.style.setProperty("--move-y", ((event.clientY - bounds.top) / bounds.height - 0.5) * -12 + "px");
-    });
-  });
-  hero.addEventListener("pointerleave", () => {
-    cancelAnimationFrame(frame);
-    photo.style.setProperty("--move-x", "0px");
-    photo.style.setProperty("--move-y", "0px");
-  });
-}
-
 const answers = document.querySelectorAll("[data-answer]");
 const feedback = document.querySelector(".sample-feedback");
 answers.forEach((button) => {

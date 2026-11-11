@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101e16">
-  <meta name="description" content="Explore the Sustainable Development Goals in short lessons, quizzes and everyday eco-actions. Start with your name.">
-  <title>EcoLingo — Small actions. Real change.</title>
+  <meta name="theme-color" content="#071711">
+  <meta name="description" content="Play your way through the Sustainable Development Goals. Explore four learning units, quizzes and everyday eco-actions.">
+  <title>EcoLingo | Play for the planet</title>
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="preload" as="image" href="assets/rainforest.webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="landing.css">
   <script>
     // Keep older quiz links, email callbacks and installed launchers working.
     const oldUrl = new URL(location.href);
     const oldTab = /^#(learn|quiz|badges|challenges|leaderboard)$/.test(oldUrl.hash);
-    const authReturn = oldUrl.searchParams.has("code") || oldUrl.searchParams.has("error") || oldUrl.searchParams.has("error_code") || oldUrl.searchParams.has("error_description") || /^#(?:access_token|error|error_code)=/.test(oldUrl.hash);
+    const authReturn = ["code", "error", "error_code", "error_description"].some((key) => oldUrl.searchParams.has(key))
+      || /^#(?:access_token|error|error_code)=/.test(oldUrl.hash);
     if (authReturn || oldTab || matchMedia("(display-mode: standalone)").matches || navigator.standalone === true) {
       const appUrl = new URL("app.html", oldUrl);
       appUrl.search = oldUrl.search;
@@ -29,102 +29,101 @@
     }
   </script>
   <script src="landing.js" defer></script>
+  <script src="terrain.js" defer></script>
 </head>
 <body>
+  <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M4.5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="arrow-up-right" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10"/></symbol>
+    <symbol id="arrow-down" viewBox="0 0 24 24"><path d="M12 4.5v14m-6-6 6 6 6-6"/></symbol>
+    <symbol id="sprout" viewBox="0 0 24 24"><path d="M12 21V11m0 5C5 16 3 12 3 8c5 0 9 2 9 8Zm0-3c0-6 3-9 9-9 0 5-3 9-9 9Z"/></symbol>
+    <symbol id="map" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  </svg>
+
   <header class="top" id="top">
     <div class="frame top-inner">
-      <a class="wordmark" href="./" aria-label="EcoLingo home"><img src="icons/icon.svg" alt="" width="38" height="38">EcoLingo<span>.</span></a>
-      <nav class="nav" aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#try-a-question">Try a question</a></nav>
-      <a class="signin" href="app.html?mode=web&amp;signin=1">Sign in <span aria-hidden="true"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" aria-hidden="true"><path d="M5.5 14.5 14 6m-7 0h7v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
+      <a class="wordmark" href="./" aria-label="EcoLingo home">
+        <span class="brand-icon"><svg class="icon"><use href="#sprout"/></svg></span> EcoLingo
+      </a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#learning-map">Learning map</a><a href="#try-a-question">Sample quiz</a>
+      </nav>
+      <a class="signin" href="app.html?mode=web&amp;signin=1">Sign in <svg class="icon"><use href="#arrow-up-right"/></svg></a>
     </div>
   </header>
 
   <main>
     <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-photo" aria-hidden="true"></div>
-      <div class="hero-wash" aria-hidden="true"></div>
-      <div class="hero-motes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-light" aria-hidden="true"></div>
       <div class="frame hero-inner">
         <div class="hero-copy">
-          <p class="eyebrow intro" style="--delay:70ms"><span class="eyebrow-line"></span> The sustainability learning game</p>
-          <h1 id="hero-title"><span class="title-line"><span style="--delay:130ms">A greener world</span></span><span class="title-line"><em style="--delay:235ms">starts with you.</em></span></h1>
-          <p class="hero-deck intro" style="--delay:320ms">Explore the Sustainable Development Goals, play quick quizzes and turn what you learn into everyday actions.</p>
-          <form id="guest-form" class="guest-form intro" style="--delay:410ms">
+          <p class="eyebrow enter" style="--delay:.03s"><i></i> The SDG learning game</p>
+          <h1 id="hero-title">
+            <span><span style="--delay:.08s">Small actions.</span></span>
+            <span><em style="--delay:.19s">Real change.</em></span>
+          </h1>
+          <p class="hero-deck enter" style="--delay:.24s">Learn the Sustainable Development Goals, test what you know, and put it into practice one habit at a time.</p>
+          <form id="guest-form" class="guest-form enter" style="--delay:.32s">
             <label for="guest-name">Your name or nickname</label>
             <div class="guest-entry">
               <input id="guest-name" type="text" placeholder="e.g. Alex" maxlength="16" autocomplete="off" required aria-describedby="guest-note guest-error">
-              <button class="primary" type="submit"><span>Play as guest</span><span class="arrow" aria-hidden="true"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" aria-hidden="true"><path d="M5.5 14.5 14 6m-7 0h7v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+              <button class="primary" type="submit">Play as guest <svg class="icon"><use href="#arrow"/></svg></button>
             </div>
-            <p id="guest-note" class="guest-note">No email needed. Your name can appear on the leaderboard.</p>
+            <p id="guest-note" class="guest-note">No email needed. Your name may appear on the leaderboard.</p>
             <p id="guest-error" class="guest-error" role="alert" hidden></p>
           </form>
         </div>
 
-        <div class="hero-object intro" style="--delay:380ms" aria-hidden="true">
-          <div class="orbit orbit-outer"></div><div class="orbit orbit-inner"></div>
-          <div class="mission-float">
-            <div class="mission">
-              <div class="mission-top"><span class="mission-icon">✳</span><span>YOUR ECO JOURNEY</span><span class="signal"></span></div>
-              <div class="mission-plant">
-                <svg viewBox="0 0 118 108" fill="none" aria-hidden="true">
-                  <path d="M15 94c18-6 69-6 88 0M34 100c12 3 40 4 54 0" stroke="#9DB495" stroke-opacity=".38"/>
-                  <path d="M58 93c-2-23 2-44 13-67M61 58C52 44 38 37 29 33m34 34c10-14 24-20 33-20M59 78C49 68 38 65 26 66" stroke="#C5DD8D" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M71 30c-3-17 10-23 22-24-2 12-9 24-22 24Z" fill="#D3E99D"/>
-                  <path d="M52 49c-16 0-25-6-29-22 16 1 28 9 29 22Z" fill="#8AAD71"/>
-                  <path d="M73 58c4-15 17-19 29-17-4 12-14 19-29 17Z" fill="#B7D381"/>
-                  <path d="M51 76c-14 3-25-1-31-12 13-4 27 1 31 12Z" fill="#809F69"/>
-                </svg>
-              </div>
-              <div class="mission-caption"><span>Small actions.<br><em>Real change.</em></span><span class="mission-arrow"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" aria-hidden="true"><path d="M5.5 14.5 14 6m-7 0h7v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
-            </div>
-            <span class="floating-tag"><span>✦</span> Grow with every lesson</span>
+        <section class="atlas enter" id="learning-map" aria-label="Interactive learning map" style="--delay:.18s">
+          <div class="atlas-top">
+            <span><svg class="icon"><use href="#map"/></svg> Learning map</span>
+            <span class="atlas-instruction">Select an SDG to explore</span>
           </div>
-        </div>
+          <div class="atlas-stage">
+            <canvas id="atlas-canvas" aria-hidden="true"></canvas>
+            <div class="atlas-nodes" aria-label="Learning units">
+              <button type="button" class="map-node" data-unit="0" aria-label="SDG 17, The 17 Goals" aria-pressed="true"><span>17</span></button>
+              <button type="button" class="map-node" data-unit="1" aria-label="SDG 4, Learning for change" aria-pressed="false"><span>4</span></button>
+              <button type="button" class="map-node" data-unit="2" aria-label="SDG 12, Use less, waste less" aria-pressed="false"><span>12</span></button>
+              <button type="button" class="map-node" data-unit="3" aria-label="SDG 13, Act on campus" aria-pressed="false"><span>13</span></button>
+            </div>
+          </div>
+          <div class="atlas-detail" id="atlas-detail" aria-live="polite">
+            <span class="unit-chip">SDG<br><b id="atlas-number">17</b></span>
+            <div><h2 id="atlas-title">The 17 Goals</h2><p id="atlas-description">Start with the global goals and why they matter.</p></div>
+          </div>
+        </section>
       </div>
-      <div class="frame hero-footer">
-        <a class="scroll-link" href="#how-it-works"><span aria-hidden="true">↓</span> Explore EcoLingo</a>
-        <dl class="hero-stats"><div><dt>Learning units</dt><dd>4</dd></div><div><dt>Quiz questions</dt><dd>60</dd></div><div><dt>Eco-actions</dt><dd>5</dd></div></dl>
-      </div>
-    </section>
 
-    <section class="experience frame" id="how-it-works" aria-labelledby="experience-title">
-      <div class="section-heading reveal">
-        <p class="eyebrow"><span class="eyebrow-line"></span> How it works</p>
-        <h2 id="experience-title">A little better <em>every day.</em></h2>
-      </div>
-      <div class="steps">
-        <article class="step reveal">
-          <span class="step-icon" aria-hidden="true">✳</span><h3>Learn</h3>
-          <p>Explore the 17 Goals, quality education, responsible consumption and climate action. Each finished lesson grows a leaf on your plant.</p>
-        </article>
-        <article class="step reveal">
-          <span class="step-icon" aria-hidden="true">✦</span><h3>Play</h3>
-          <p>Practice with unit quizzes or the Daily Mix. Get an explanation after each answer, earn points and unlock badges as you go.</p>
-        </article>
-        <article class="step reveal">
-          <span class="step-icon" aria-hidden="true">◎</span><h3>Act</h3>
-          <p>Check in when you do an eco-action, from refilling your bottle to cutting food waste. See how you rank on the leaderboard.</p>
-        </article>
+      <div class="frame hero-footer enter" style="--delay:.41s">
+        <dl class="hero-stats">
+          <div><dt>Learning units</dt><dd>4</dd></div>
+          <div><dt>Quiz questions</dt><dd>60</dd></div>
+          <div><dt>Eco-actions</dt><dd>5</dd></div>
+        </dl>
+        <a class="next-chapter" href="#try-a-question" aria-label="Try a question"><span>Try a question</span><i><svg class="icon"><use href="#arrow-down"/></svg></i></a>
       </div>
     </section>
 
     <section class="sample" id="try-a-question" aria-labelledby="sample-title">
       <div class="frame sample-inner">
         <div class="sample-copy reveal">
-          <p class="eyebrow"><span class="eyebrow-line"></span> Try a question</p>
-          <h2 id="sample-title">How green is<br><em>your thinking?</em></h2>
-          <p>Pick an answer for a quick taste of the EcoLingo quiz.</p>
-          <a class="text-link focus-name" href="#guest-form">Start playing <span aria-hidden="true"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" aria-hidden="true"><path d="M5.5 14.5 14 6m-7 0h7v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
+          <p class="eyebrow"><i></i> Sample quiz</p>
+          <h2 id="sample-title">What would <em>you do?</em></h2>
+          <p>Choose an answer to see how EcoLingo explains the choices behind everyday habits.</p>
+          <a class="text-link focus-name" href="#guest-form">Play the full game <svg class="icon"><use href="#arrow-up-right"/></svg></a>
         </div>
         <div class="sample-card reveal">
-          <p class="sample-tag"><span>✦</span> SDG 12 · Responsible Consumption</p>
+          <p class="sample-tag"><span></span> SDG 12 <span class="sample-dot"></span> Responsible Consumption</p>
           <h3>Which action helps prevent food waste?</h3>
           <div class="sample-options" role="group" aria-label="Choose an answer">
             <button type="button" data-answer="wrong"><span>A</span> Buy more than you need</button>
             <button type="button" data-answer="right"><span>B</span> Plan meals before shopping</button>
             <button type="button" data-answer="wrong"><span>C</span> Throw out usable leftovers</button>
           </div>
-          <p class="sample-feedback" role="status" aria-live="polite"></p>
+          <p class="sample-feedback" role="status"></p>
         </div>
       </div>
     </section>
@@ -132,9 +131,9 @@
 
   <footer class="bottom">
     <div class="frame bottom-inner">
-      <a class="wordmark" href="./"><img src="icons/icon.svg" alt="" width="32" height="32">EcoLingo<span>.</span></a>
+      <a class="wordmark" href="./"><span class="brand-icon"><svg class="icon"><use href="#sprout"/></svg></span> EcoLingo</a>
       <p>A Universiti Malaya student project</p>
-      <a href="#top">Back to top <span aria-hidden="true">↑</span></a>
+      <a href="#top">Back to top <svg class="icon"><use href="#arrow-up-right"/></svg></a>
     </div>
   </footer>
 </body>
