@@ -5,8 +5,8 @@
 
 ## Supabase
 
-1. 打开 [现有项目](https://supabase.com/dashboard/project/jqivhiozysizqnbtpfkn)，确认项目可用。
-2. 在 **SQL Editor** 执行 `supabase/google_accounts.sql`。此迁移建立 Google 版独立档案、进度同步和排行榜。同一账号已有的进度会按用户 ID 导入一次。
+1. 新 [Supabase 项目](https://supabase.com/dashboard/project/xindohtmqpwzgwdggdwx) 已应用 `supabase/google_accounts.sql`，迁移版本为 `20261111144210`。
+2. 原站点的账号和积分仍在原 Supabase 项目。新版连接的新项目目前没有玩家记录。
 3. 在 **Authentication → URL Configuration** 加入确切的回跳网址
    - Sites 版：`https://ecolingo-pc-preview.leowshenen.chatgpt.site/app.html`
    - 如发布到 GitHub Pages：`https://shenenleow10521.github.io/EcoLingo/app.html`
@@ -18,7 +18,7 @@
 1. 在 [Google Auth Platform](https://console.cloud.google.com/auth/clients) 使用 Web application 类型的 OAuth client。
 2. Authorized JavaScript origins 加入使用的站点 origin，例如 `https://ecolingo-pc-preview.leowshenen.chatgpt.site`。
 3. Authorized redirect URIs 加入 Supabase 提供的 callback
-   `https://jqivhiozysizqnbtpfkn.supabase.co/auth/v1/callback`。
+   `https://xindohtmqpwzgwdggdwx.supabase.co/auth/v1/callback`。
 4. Audience 使用 **External**。若要让测试名单以外的 Google 用户登入，请将发布状态设为 **In production**。设置细节见 [Supabase Google 登录指南](https://supabase.com/docs/guides/auth/social-login/auth-google)。
 
 ## 发布前验证
