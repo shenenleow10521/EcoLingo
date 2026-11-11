@@ -457,7 +457,15 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 <link rel="stylesheet" href="workspace.css">
 </head>
 <body>
-<div class="stage">
+<main id="app-gate" class="app-gate" aria-labelledby="gate-title">
+  <h1 id="gate-title">Opening EcoLingo</h1>
+  <p id="gate-status" role="status">Checking your Google account…</p>
+  <div class="gate-actions">
+    <button class="btn" id="gate-retry" type="button" hidden>Try again</button>
+    <a class="btn ghost" href="./#sign-in">Back to sign-in</a>
+  </div>
+</main>
+<div class="stage" hidden>
   <aside class="workspace-sidebar" aria-label="Workspace navigation" hidden>
     <a href="./" class="workspace-brand"><span class="mark" data-ic="sprout"></span>EcoLingo<span>.</span></a>
     <p class="workspace-label">Your workspace</p>
@@ -473,7 +481,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   <aside class="about" aria-label="About EcoLingo">
     <div class="wm"><span class="mark" data-ic="sprout"></span>EcoLingo</div>
     <p class="lede">Learn the UN Sustainable Development Goals in two-minute lessons, test yourself with quick quizzes and build greener habits every week.</p>
-    <p class="meta">Made for Universiti Malaya students · SDG 4 · SDG 12 · SDG 13</p>
+    <p class="meta">SDG 4 · SDG 12 · SDG 13 · SDG 17</p>
     <div>
       <p class="eyebrow" style="margin-bottom:8px">What’s inside</p>
       <nav class="about-nav">
@@ -510,9 +518,9 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   </div>
 </div>
 
-<!-- Backend: fill in config.js (see DEPLOY.md). Leave it empty and the app runs offline in this browser only. -->
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
 <script>
 (function(){
 "use strict";
@@ -672,79 +680,63 @@ var COMMUNITY_GOAL = 50, QN_UNIT = 8, QN_MIX = 10, MIX_BONUS = 15;
 /* ---------- dates ---------- */
 function pad(n){ return (n<10?"0":"")+n; }
 function dkey(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
-function today(){ return dkey(new Date()); }
-function daysAgo(n){ var d=new Date(); d.setDate(d.getDate()-n); return dkey(d); }
-function weekDays(){ var d=new Date(); d.setHours(0,0,0,0); var dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); var out=[]; for(var i=0;i<7;i++){ var x=new Date(d); x.setDate(d.getDate()+i); out.push(x); } return out; }
+var malaysiaDate = new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Kuala_Lumpur",year:"numeric",month:"2-digit",day:"2-digit"});
+function today(){
+  var parts = {};
+  malaysiaDate.formatToParts(new Date()).forEach(function(part){ parts[part.type]=part.value; });
+  return parts.year+"-"+parts.month+"-"+parts.day;
+}
+function daysAgo(n){ var d=new Date(today()+"T12:00:00"); d.setDate(d.getDate()-n); return dkey(d); }
+function weekDays(){ var d=new Date(today()+"T12:00:00"); var dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); var out=[]; for(var i=0;i<7;i++){ var x=new Date(d); x.setDate(d.getDate()+i); out.push(x); } return out; }
 function fmtDay(d){ return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); }
 
-/* ---------- browser mode ---------- */
-var params = new URLSearchParams(location.search);
-var mode = params.get("mode");
-var webMode = mode === "web" || mode === "guest";
-var guestMode = mode === "guest";
-var accountEntry = mode === "web" && params.get("signin") === "1";
-var classroomPlayer = null;
-
-if(guestMode){
-  try{ classroomPlayer = JSON.parse(sessionStorage.getItem("ecolingo-classroom-player") || "null"); }catch(e){}
-  if(!classroomPlayer || !/^[a-f0-9]{32}$/.test(classroomPlayer.id) || typeof classroomPlayer.name !== "string" || !classroomPlayer.name.trim()){
-    location.replace("./#guest-form");
-    return;
-  }
-  window.addEventListener("pageshow", function(e){
-    if(!e.persisted) return;
-    try{
-      var active = JSON.parse(sessionStorage.getItem("ecolingo-classroom-player") || "null");
-      if(!active || active.id !== classroomPlayer.id) location.replace("./#guest-form");
-    }catch(e){ location.replace("./#guest-form"); }
-  });
-}
-
+/* ---------- account and progress ---------- */
+var auth = window.EcoLingoAuth;
+var sb = auth && auth.client;
+var webMode = !(matchMedia("(display-mode: standalone)").matches || navigator.standalone === true);
 if(webMode){
   document.body.dataset.workspace = "true";
   $(".workspace-sidebar").hidden = false;
   $(".workspace-mobile-home").hidden = false;
   $(".workspace-player").hidden = false;
-  if(guestMode){
-    $(".workspace-home span:last-child").textContent = "Switch player";
-    $(".workspace-home").href = "./#guest-form";
-    $(".workspace-mobile-home").href = "./#guest-form";
-  }
 }
 
-/* ---------- cloud (Supabase) ---------- */
-var CFG = window.ECOLINGO_CONFIG || {};
-var sb = null;
-try{
-  if(CFG.supabaseUrl && CFG.supabaseKey && window.supabase && window.supabase.createClient){
-    var authOptions = { persistSession:true, autoRefreshToken:true, detectSessionInUrl:!guestMode, flowType:"pkce" };
-    if(guestMode){
-      authOptions.storage = sessionStorage;
-      authOptions.storageKey = "ecolingo-classroom-auth-" + classroomPlayer.id;
-    }
-    sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth:authOptions });
-  }
-}catch(e){ console.warn("EcoLingo: Supabase client failed", e); }
-/* C.status: local | connecting | syncing | synced | error */
-var C = { on:!!sb, user:null, uid:null, status: sb?"connecting":"local", board:{week:null, all:null}, community:null,
-          t:null, hold:false, otpEmail:"", busy:false, msg:"", msgErr:false };
+var C = { user:null, uid:null, status:"connecting", board:{week:null,all:null},
+          boardError:{week:false,all:false}, community:null, t:null, busy:false, msg:"",
+          revision:0, epoch:0, changed:0, synced:0, resetAt:0, inflight:null, request:0 };
 
-/* ---------- state ---------- */
-var KEY = guestMode ? "ecolingo-classroom-progress-" + classroomPlayer.id : "ecolingo-proto-v1";
-var progressStorage = guestMode ? sessionStorage : localStorage;
-function zeroState(nick){ return { v:1, nick:nick||"EcoRookie", lessons:{}, quiz:{}, checkins:[], log:[], streak:0, last:"", badges:{}, qa:{}, perfect:{}, mixDay:"", onb:false }; }
-function norm(s){ if(!s) return s; s.qa=s.qa||{}; s.perfect=s.perfect||{}; s.mixDay=s.mixDay||""; s.onb=!!s.onb; s.lessons=s.lessons||{}; s.quiz=s.quiz||{}; s.checkins=s.checkins||[]; s.log=s.log||[]; s.badges=s.badges||{}; return s; }
-function load(){ try{ var v=JSON.parse(progressStorage.getItem(KEY)); return v && v.v===1 ? norm(v) : null; }catch(e){ return null; } }
-function persistLocal(){ try{ progressStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-function save(){ persistLocal(); queueCloudSave(); }
-var S = load() || zeroState(guestMode ? classroomPlayer.name : undefined);
-if(guestMode){
-  S.onb = true;
-  persistLocal();
+function zeroState(nick){ return { v:1, nick:nick||"EcoRookie", lessons:{}, quiz:{}, checkins:[], log:[], earned:{}, streak:0, last:"", badges:{}, qa:{}, perfect:{}, mixDay:"", onb:true }; }
+function norm(s){ return Object.assign(zeroState(), s, { earned:s.earned||{}, onb:true }); }
+function playerKey(){ return "ecolingo-google-progress-" + C.uid; }
+function readPending(){
+  try{ return JSON.parse(localStorage.getItem(playerKey())); }catch(e){ return null; }
 }
+function persistLocal(){
+  if(!C.uid) return;
+  try{
+    if(C.changed===C.synced){ localStorage.removeItem(playerKey()); return; }
+    localStorage.setItem(playerKey(), JSON.stringify({ state:S, epoch:C.epoch, reset:!!C.resetAt }));
+  }catch(e){}
+}
+function save(){ C.changed++; persistLocal(); queueCloudSave(); }
+var S = zeroState();
 
-function totalPts(){ return S.log.reduce(function(a,b){ return a+b.n; },0); }
-function weekPts(){ var w=dkey(weekDays()[0]); return S.log.filter(function(x){ return x.d>=w; }).reduce(function(a,b){ return a+b.n; },0); }
+function eventPoints(key){
+  if(key.startsWith("lesson:") || key.startsWith("checkin:bottle:")) return 20;
+  if(key.startsWith("question:") || key.startsWith("perfect:")) return 10;
+  return 15;
+}
+function pointsFrom(start){
+  var end=today();
+  var legacy=S.log.reduce(function(total, entry){
+    return entry.d>=start && entry.d<=end ? total+entry.n : total;
+  },0);
+  return Object.entries(S.earned).reduce(function(total, entry){
+    return entry[1]>=start && entry[1]<=end ? total+eventPoints(entry[0]) : total;
+  },legacy);
+}
+function totalPts(){ return pointsFrom(""); }
+function weekPts(){ return pointsFrom(dkey(weekDays()[0])); }
 function lessonsDone(){ return UNITS.filter(function(u){ return S.lessons[u.id]; }).length; }
 function qid(u,i){ return u.id+"-"+i; }
 function mastered(u){ var m=0; u.quiz.forEach(function(_,i){ if(S.qa[qid(u,i)]) m++; }); return m; }
@@ -760,13 +752,14 @@ function avColor(n){ var h=0; for(var i=0;i<n.length;i++) h=(h*31+n.charCodeAt(i
 function checked(id,day){ return S.checkins.some(function(x){ return x.c===id && x.d===day; }); }
 function weekCheckins(){ var w=dkey(weekDays()[0]); return S.checkins.filter(function(x){ return x.d>=w; }).length; }
 function board(mode){
-  var rows;
-  rows = (C.board[mode]||[]).filter(function(r){ return !r.is_me; }).map(function(r){ return {n:r.nick, pts:r.pts}; });
-  rows.push({n:S.nick, me:true, pts: mode==="week"? weekPts() : totalPts()});
-  rows.sort(function(a,b){ return (b.pts-a.pts) || (a.me?-1:(b.me?1:0)); });
-  return rows;
+  return (C.board[mode]||[]).map(function(r){
+    return {n:r.nick, pts:Number(r.pts), rank:Number(r.rank_position), me:r.is_me};
+  });
 }
-function myRank(mode){ var r=board(mode); for(var i=0;i<r.length;i++) if(r[i].me) return i+1; return r.length; }
+function myRank(mode){
+  var row=board(mode).find(function(r){ return r.me; });
+  return row ? row.rank : Infinity;
+}
 function touch(){ var t=today(); if(S.last===t) return; S.streak = (S.last===daysAgo(1)) ? S.streak+1 : 1; S.last=t; }
 
 var BADGES = [
@@ -777,7 +770,7 @@ var BADGES = [
   {id:"starter", name:"Action Starter", desc:"Check in your first eco-action", icon:"leaf", c:"#4C9F38", prog:function(){ return [S.checkins.length,1]; }},
   {id:"habit", name:"Habit Builder", desc:"Reach 10 eco-action check-ins", icon:"recycle", c:"#BF8B2E", prog:function(){ return [S.checkins.length,10]; }},
   {id:"roll", name:"On a Roll", desc:"Keep a three-day streak", icon:"flame", c:"#FD6925", prog:function(){ return [curStreak(),3]; }},
-  {id:"podium", name:"Top Three", desc:"Reach the top 3 this week", icon:"trophy", c:"#FCC30B", ink:"#2B2100", prog:function(){ return [(weekPts()>0 && ((!guestMode && !C.on) || C.board.week) && myRank("week")<=3)?1:0,1]; }}
+  {id:"podium", name:"Top Three", desc:"Reach the top 3 this week", icon:"trophy", c:"#FCC30B", ink:"#2B2100", prog:function(){ return [(weekPts()>0 && myRank("week")<=3)?1:0,1]; }}
 ];
 
 /* ---------- ui state ---------- */
@@ -811,7 +804,7 @@ function render(){
 }
 function renderHeader(animate){
   $("#streakN").textContent = curStreak();
-  if(webMode) $(".workspace-player").textContent = (guestMode ? "Guest · " : "") + S.nick;
+  if(webMode) $(".workspace-player").textContent = S.nick;
   $("#avatar").textContent = initials(S.nick);
   var p = totalPts();
   if(!animate || reduced || shownPts===null){ shownPts=p; $("#ptsN").textContent=p; return; }
@@ -823,10 +816,10 @@ function greeting(){ var h=new Date().getHours(); return h<12?"Good morning":(h<
 function toast(msg){ var t=document.createElement("div"); t.className="toast"; t.textContent=msg; $("#app").appendChild(t); setTimeout(function(){ t.remove(); }, 2500); }
 
 /* ---------- points + badges ---------- */
-function award(n, rect){
-  var before=levelIdx(totalPts());
-  var last = S.log[S.log.length-1], t=today();
-  if(last && last.d===t) last.n += n; else S.log.push({d:t,n:n});
+function award(key, rect, day){
+  if(S.earned[key]) return;
+  var before=levelIdx(totalPts()), n=eventPoints(key);
+  S.earned[key]=day||today();
   touch(); save();
   var after=levelIdx(totalPts());
   if(after>before) badgeQ.push({level:true, name:LEVELS[after].n, desc:"You reached level "+(after+1)+" with "+totalPts()+" points. Keep growing!", icon:"sprout", c:"#1C8549"});
@@ -944,7 +937,7 @@ function drawLesson(){
 function finishLesson(btn){
   var rect=btn.getBoundingClientRect();
   L.done=true; SFX.play("complete"); SFX.buzz(20);
-  if(!S.lessons[L.u.id]){ S.lessons[L.u.id]=true; justGrew=L.u.id; L.gained=20; drawLesson(); award(20, rect); }
+  if(!S.lessons[L.u.id]){ S.lessons[L.u.id]=true; justGrew=L.u.id; L.gained=20; drawLesson(); award("lesson:"+L.u.id, rect); }
   else drawLesson();
   if(!reduced) confettiLight();
 }
@@ -1041,23 +1034,23 @@ function pick(i, btn){
   render();
   var nb=$('.opt[data-i="'+i+'"]'); if(nb) nb.classList.add(ok?"pulse":"shake");
   if(ok){ SFX.play("correct", Q.combo); SFX.buzz(12); } else { SFX.play("wrong"); SFX.buzz([30,50,30]); }
-  if(gain){ Q.earned+=gain; award(gain, rect); } else save();
+  if(gain){ Q.earned+=gain; award("question:"+it.id, rect, S.qa[it.id]); } else save();
   var fb=$(".feedback"); if(fb && fb.scrollIntoView) fb.scrollIntoView({block:"nearest", behavior: reduced?"auto":"smooth"});
 }
 function nextQ(){
   Q.i++; Q.picked=null;
   if(Q.i>=Q.items.length){
     Q.done=true;
-    var sc=Q.res.filter(Boolean).length, n=Q.items.length, prev=S.quiz[Q.id], bonus=0;
+    var sc=Q.res.filter(Boolean).length, n=Q.items.length, prev=S.quiz[Q.id], bonus=0, bonusKey;
     S.quiz[Q.id]={best:(prev && (prev.of||5)===n) ? Math.max(prev.best, sc) : sc, of:n, taken:(prev?prev.taken:0)+1};
     var perfect = sc===n;
-    if(perfect && Q.id!=="mix" && !S.perfect[Q.id]){ S.perfect[Q.id]=today(); Q.firstPerfect=true; bonus+=10; }
-    if(Q.id==="mix" && S.mixDay!==today()){ S.mixDay=today(); Q.mixBonus=true; bonus+=MIX_BONUS; }
+    if(perfect && Q.id!=="mix" && !S.perfect[Q.id]){ S.perfect[Q.id]=today(); Q.firstPerfect=true; bonus+=10; bonusKey="perfect:"+Q.id; }
+    if(Q.id==="mix" && S.mixDay!==today()){ S.mixDay=today(); Q.mixBonus=true; bonus+=MIX_BONUS; bonusKey="mix:"+S.mixDay; }
     Q.earned+=bonus;
     save(); render(); $("#view").scrollTop=0;
     SFX.play(perfect ? "perfect" : "done");
     if(perfect) confetti();
-    if(bonus){ var r=$("#ring"); setTimeout(function(){ award(bonus, r ? r.getBoundingClientRect() : null); }, 350); }
+    if(bonus){ var r=$("#ring"); award(bonusKey, r ? r.getBoundingClientRect() : null, Q.mixBonus ? S.mixDay : S.perfect[Q.id]); }
     else { touch(); save(); renderHeader(false); setTimeout(checkBadges, 300); }
   } else { SFX.play("tap"); render(); $("#view").scrollTop=0; }
 }
@@ -1091,7 +1084,7 @@ function renderBadges(){
 function renderChallenges(){
   var days=weekDays(), t=today(), wc=weekCheckins();
   var doneToday = CHALLENGES.filter(function(c){ return checked(c.id,t); }).length;
-  var comm = C.on ? (C.community==null ? wc : Math.max(C.community, wc)) : wc, cw = Math.min(100, Math.round(comm/COMMUNITY_GOAL*100));
+  var comm = C.community==null ? wc : Math.max(C.community, wc), cw = Math.min(100, Math.round(comm/COMMUNITY_GOAL*100));
   var list = CHALLENGES.map(function(c){
     var dn=checked(c.id,t), pts=15+(c.feat?5:0);
     var dots = days.map(function(d,k){ var key=dkey(d); return '<span class="dot'+(checked(c.id,key)?" on":"")+(key===t?" today":"")+(key>t?" future":"")+'" title="'+d.toLocaleDateString("en-GB",{weekday:"long"})+'">'+"MTWTFSS"[k]+'</span>'; }).join("");
@@ -1113,76 +1106,55 @@ function renderChallenges(){
 }
 function checkin(id, btn){
   var t=today(); if(checked(id,t)) return;
-  var c=null; CHALLENGES.forEach(function(x){ if(x.id===id) c=x; });
   var rect=btn.getBoundingClientRect();
   S.checkins.push({c:id,d:t});
   SFX.play("stamp"); SFX.buzz(25);
-  award(15+(c&&c.feat?5:0), rect);
+  award("checkin:"+id+":"+t, rect, t);
   render();
   var card=$('.chal[data-c="'+id+'"]'); if(card) card.classList.add("stamped");
 }
 
 /* ---------- LEADERBOARD ---------- */
 function renderBoard(){
-  var rows=board(boardMode), me=0; rows.forEach(function(r,i){ if(r.me) me=i; });
-  var pod=[1,0,2].map(function(k){ var r=rows[k];
-    if(!r) return '<div class="pod p'+(k+1)+' empty"><span class="crown"></span><span class="av lg" style="--av:var(--muted)">?</span><span class="pod-name">Open spot</span><span class="pod-pts">0 pts</span><div class="pod-block">'+(k+1)+'</div></div>';
-    return '<div class="pod p'+(k+1)+(r.me?" me":"")+'"><span class="crown">'+(k===0?ic("crown"):"")+'</span><span class="av lg" style="--av:'+avColor(r.n)+'">'+initials(r.n)+'</span>'+
-      '<span class="pod-name">'+esc(r.n)+'</span>'+(r.me?'<span class="you">You</span>':'<span class="pod-pts">'+r.pts+' pts</span>')+'<div class="pod-block">'+(k+1)+'</div></div>'; }).join("");
-  var list = rows.slice(3).map(function(r,i){
-    return '<div class="row'+(r.me?" me":"")+'" style="--k:'+i+'"><span class="rk">'+(i+4)+'</span><span class="av" style="--av:'+avColor(r.n)+'">'+initials(r.n)+'</span>'+
-      '<span class="nm">'+esc(r.n)+(r.me?' <span class="you">· You</span>':'')+'</span><span class="pt">'+r.pts+' <small>pts</small></span></div>'; }).join("");
-  var msg;
-  if(guestMode && !C.board[boardMode]) msg="Live ranks are available when the leaderboard connects.";
-  else if(me===0) msg="You are leading. Keep the streak going.";
-  else { var ahead=rows[me-1]; msg=(ahead.pts-rows[me].pts+1)+" points to pass "+esc(ahead.n)+"."; }
+  var rows=board(boardMode), me=rows.find(function(r){ return r.me; });
+  var ready=C.board[boardMode]!==null, error=C.boardError[boardMode];
+  var pod=[2,1,3].map(function(rank){
+    var r=rows.find(function(entry){ return entry.rank===rank; });
+    if(!r) return '<div class="pod p'+rank+' empty"><span class="crown"></span><span class="av lg" style="--av:var(--muted)">–</span><span class="pod-name">Open spot</span><div class="pod-block">'+rank+'</div></div>';
+    return '<div class="pod p'+rank+(r.me?" me":"")+'"><span class="crown">'+(rank===1?ic("crown"):"")+'</span><span class="av lg" style="--av:'+avColor(r.n)+'">'+esc(initials(r.n))+'</span>'+
+      '<span class="pod-name">'+esc(r.n)+'</span><span class="pod-pts">'+r.pts+' pts'+(r.me?' · You':'')+'</span><div class="pod-block">'+rank+'</div></div>';
+  }).join("");
+  var list=rows.filter(function(r){ return r.rank>3; }).map(function(r,i){
+    return '<div class="row'+(r.me?" me":"")+'" style="--k:'+Math.min(i,10)+'"><span class="rk">'+r.rank+'</span><span class="av" style="--av:'+avColor(r.n)+'">'+esc(initials(r.n))+'</span>'+
+      '<span class="nm">'+esc(r.n)+(r.me?' <span class="you">· You</span>':'')+'</span><span class="pt">'+r.pts+' <small>pts</small></span></div>';
+  }).join("");
+  var msg=error ? "Could not refresh the leaderboard. Try again." :
+    !ready ? "Loading ranks…" : !me ? "Earn and sync points to join this leaderboard." :
+    me.rank===1 ? "You are leading this leaderboard." : "Your position includes all ranked players.";
   return '<section class="screen">'+
     '<div class="head"><p class="eyebrow">Leaderboard</p><h1 class="h1">'+(boardMode==="week"?"This week":"All time")+'</h1></div>'+
     '<div class="seg" role="group" aria-label="Leaderboard period"><button data-act="board" data-m="week" aria-pressed="'+(boardMode==="week")+'">This week</button><button data-act="board" data-m="all" aria-pressed="'+(boardMode==="all")+'">All time</button></div>'+
-    '<div class="me-card"><b>'+(guestMode && !C.board[boardMode]?'—':'#'+(me+1))+'</b><p><strong>'+esc(S.nick)+'</strong> · '+rows[me].pts+' pts<br><span class="muted">'+msg+'</span></p></div>'+
-    (guestMode && !C.board[boardMode]?'':'<div class="podium">'+pod+'</div>')+
-    '<div class="rows">'+list+'</div>'+
-    '<p class="fine">'+(C.on?(C.board[boardMode]?"Live ranks from everyone on EcoLingo.":(C.status==="error"?"Live ranks are temporarily unavailable.":"Loading live ranks…")):"Go online to see live ranks.")+" Points are for fun and carry no real prizes."+'</p></section>';
+    '<div class="me-card"><b>'+(me?'#'+me.rank:'—')+'</b><p><strong>'+esc(S.nick)+'</strong>'+(me?' · '+me.pts+' pts':'')+'<br><span class="muted">'+msg+'</span></p></div>'+
+    (rows.length?'<div class="podium">'+pod+'</div><div class="rows">'+list+'</div>':'')+
+    '<div class="ctl-row"><button class="btn ghost" data-act="refreshBoard">Refresh leaderboard</button></div>'+
+    '<p class="fine">Rankings use synced points. The weekly leaderboard resets on Monday, Malaysia time.</p></section>';
 }
 
 /* ---------- profile ---------- */
-function setAccountModal(active){
-  $$(".workspace-sidebar, .topbar, #view, .tabbar").forEach(function(el){ el.inert=active; });
-}
-function openAccountEntry(){
-  setAccountModal(true);
-  var message = params.get("error_description") || "";
-  if(message) say(message, true);
-  $("#sheet").innerHTML = '<div class="scrim" data-act="closeSheet"></div><div class="bsheet account-entry" role="dialog" aria-modal="true" aria-labelledby="login-t">'+
-    '<button type="button" class="icon-btn entry-close" data-act="closeSheet" aria-label="Close sign-in">'+ic("x")+'</button>'+
-    '<span class="wel-mark">'+ic("sprout")+'</span><h2 id="login-t" class="h2">Sign in to EcoLingo</h2>'+
-    '<div class="acct" id="acct">'+(C.on?acctHTML():'<p class="note">Email sign-in is unavailable right now. Reconnect and reload this page to try again.</p>')+'</div>'+
-    '<a class="entry-guest" href="./#guest-form">Play as a guest</a></div>';
-  ($("#email") || $(".entry-close")).focus();
-}
 function openProfile(){
   $("#sheet").innerHTML = '<div class="scrim" data-act="closeSheet"></div><div class="bsheet" role="dialog" aria-modal="true" aria-labelledby="pf-t">'+
     '<div class="grabber"></div><h2 id="pf-t" class="h2">Your profile</h2>'+
-    '<p class="note">Your nickname is shown on the leaderboard.'+(C.on?" Progress is saved to the cloud automatically.":" Progress is saved on this device.")+'</p>'+
+    '<p class="note">Your nickname is shown on the leaderboard. Your Google email stays private.</p>'+
     '<form id="nickForm" class="nick-row"><label class="sr" for="nick">Nickname</label><input id="nick" maxlength="16" autocomplete="off" value="'+esc(S.nick)+'"><button class="btn" type="submit">Save</button></form>'+
-    (guestMode?'<div class="divider"></div><p class="eyebrow">Guest session</p><div class="ctl-row"><a class="btn ghost" href="./#guest-form">Switch player</a><a class="btn ghost" href="app.html?mode=web&amp;signin=1">Sign in</a></div>':
-      (C.on?'<div class="divider"></div><p class="eyebrow">Account and sync</p><div class="acct" id="acct">'+acctHTML()+'</div>':''))+
+    '<div class="divider"></div><p class="eyebrow">Account and sync</p><div class="acct" id="acct">'+acctHTML()+'</div>'+
     '<div class="divider"></div><p class="eyebrow">App</p>'+
     '<div class="setrow"><div><b>Sound and vibration</b><span>Effects for answers, points and badges</span></div><button class="switch" role="switch" aria-label="Sound and vibration" aria-checked="'+SFX.isOn()+'" data-act="sound"><i></i></button></div>'+
     (webMode?"":installHTML(true))+
     '<div class="divider"></div><p class="eyebrow">Reset</p>'+
     '<div class="ctl-row"><button class="btn ghost" data-act="reset" data-mode="zero">Start from zero</button></div>'+
-    '<p class="note" id="resetNote">'+(C.on?"Clears your points, badges and check-ins on every device you use.":"Clears your points, badges and check-ins.")+'</p></div>';
+    '<p class="note" id="resetNote">Clears your points, badges and check-ins across devices.</p></div>';
 }
-function closeSheet(){
-  var wasAccount = !!$(".account-entry");
-  $("#sheet").innerHTML=""; L=null;
-  if(wasAccount){
-    setAccountModal(false);
-    $("#avatar").focus();
-    accountEntry=false;
-  }
-}
+function closeSheet(){ $("#sheet").innerHTML=""; L=null; }
 
 /* ---------- events ---------- */
 var ACT = {
@@ -1200,43 +1172,33 @@ var ACT = {
   quitQuiz:function(){ Q=null; render(); },
   quizHome:function(){ Q=null; render(); $("#view").scrollTop=0; },
   checkin:function(el){ checkin(el.dataset.c, el); },
-  board:function(el){ boardMode=el.dataset.m; render(); },
+  board:function(el){ boardMode=el.dataset.m; render(); refreshShared(); },
+  refreshBoard:function(){ cloudSave().then(refreshShared); },
   profile:function(){ openProfile(); setTimeout(function(){ var i=$("#nick"); if(i) i.focus(); }, 50); },
   closeSheet:function(){ closeSheet(); },
-  otpBack:function(){ C.otpEmail=""; C.msg=""; C.hold=false; refreshAcct(); cloudSave(); },
   signOut:function(){ signOut(); },
   badgeOk:function(){ $("#modal").innerHTML=""; if(badgeQ.length) setTimeout(showBadge, 150); },
   reset:function(el){
     if(el.dataset.armed!=="1"){
       el.dataset.armed="1"; el.textContent="Tap again to confirm"; $("#resetNote").textContent="This replaces your current points, badges and check-ins."; return; }
-    var nick=S.nick; S = zeroState(nick); S.onb=true;
+    var nick=S.nick; S=zeroState(nick); C.resetAt=C.changed+1;
     save(); Q=null; closeSheet(); shownPts=null; renderHeader(false); firstPaint=true; go(tab); toast("Progress cleared");
   }
 };
-var TAP_ACTS={tab:1, board:1, profile:1, lesson:1, closeSheet:1, closeLesson:1, quitQuiz:1, quizHome:1, badgeOk:1, otpBack:1};
+var TAP_ACTS={tab:1, board:1, profile:1, lesson:1, closeSheet:1, closeLesson:1, quitQuiz:1, quizHome:1, badgeOk:1};
 document.addEventListener("click", function(e){
-  var el=e.target.closest("[data-act]"); if(!el || el.disabled) return;
+  var el=e.target.closest("[data-act]"); if(!C.uid || C.busy || !el || el.disabled) return;
   if(TAP_ACTS[el.dataset.act]) SFX.play("tap");
   var f=ACT[el.dataset.act]; if(f){ e.preventDefault(); f(el,e); }
 });
 document.addEventListener("submit", function(e){
-  if(e.target.id==="welForm"){ e.preventDefault(); finishWelcome(); return; }
-  if(e.target.id==="emailForm"){ e.preventDefault(); sendCode($("#email").value); return; }
-  if(e.target.id==="otpForm"){ e.preventDefault(); verifyCode($("#otp").value); return; }
+  if(!C.uid || C.busy) return;
   if(e.target.id!=="nickForm") return; e.preventDefault();
   var v=$("#nick").value.trim().replace(/\s+/g," ").slice(0,16);
   if(!v){ $("#nick").focus(); return; }
   S.nick=v; save(); renderHeader(false); closeSheet(); render(); toast("Nickname saved");
 });
 document.addEventListener("keydown", function(e){
-  var entry = $(".account-entry");
-  if(e.key==="Tab" && entry){
-    var focusable = $$("button:not(:disabled), input:not(:disabled), a[href]", entry);
-    var first=focusable[0], last=focusable[focusable.length-1];
-    if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
-    else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
-    return;
-  }
   if(e.key!=="Escape") return;
   if($("#modal").innerHTML){ ACT.badgeOk(); return; }
   if($("#sheet").innerHTML){ if(L) closeLesson(); else closeSheet(); }
@@ -1245,183 +1207,234 @@ document.addEventListener("keydown", function(e){
 /* ---------- cloud sync ---------- */
 function syncLabel(){
   return {connecting:["Connecting…",""], syncing:["Saving…",""], synced:["Saved to the cloud","ok"],
-          error:["Offline. Progress is kept on this device and syncs later.","bad"]}[C.status] || ["",""];
+          error:["Progress is pending on this device. Reconnect to sync.","bad"]}[C.status];
 }
 function acctHTML(){
-  var sl=syncLabel(), u=C.user, signed=u && !u.is_anonymous && u.email, h='<p class="sync '+sl[1]+'" id="syncNote">'+sl[0]+'</p>';
-  if(signed){
-    h+='<p class="note">Signed in as <strong>'+esc(u.email)+'</strong>. Sign in with the same email on another device to continue there.</p>'+
-       '<div class="ctl-row"><button class="btn ghost" data-act="signOut"'+(C.busy?' disabled':'')+'>Sign out</button></div>';
-  } else if(C.otpEmail){
-    h+='<p class="note">We emailed a sign-in link to <strong>'+esc(C.otpEmail)+'</strong>. Open it <strong>in this browser on this device</strong>. If the email shows a code instead, type it here.</p>'+
-       '<form id="otpForm" class="nick-row"><label class="sr" for="otp">Code</label><input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456"><button class="btn" type="submit"'+(C.busy?' disabled':'')+'>Verify</button></form>'+
-       '<button class="btn ghost sm" data-act="otpBack">Use a different email</button>';
-  } else {
-    h+='<p class="note">'+(accountEntry?'Enter your email to receive a sign-in link or code.':'Add your email to keep your progress and use EcoLingo on other devices.')+'</p>'+
-       '<form id="emailForm" class="nick-row"><label class="sr" for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@siswa.um.edu.my"><button class="btn" type="submit"'+(C.busy?' disabled':'')+'>Send code</button></form>';
-  }
-  if(C.msg) h+='<p class="msg'+(C.msgErr?' err':'')+'" role="status">'+esc(C.msg)+'</p>';
-  return h;
+  var sl=syncLabel();
+  return '<p class="sync '+sl[1]+'" id="syncNote">'+sl[0]+'</p>'+
+    '<p class="note">Signed in with Google as <strong>'+esc(C.user.email||"your Google account")+'</strong>.</p>'+
+    '<div class="ctl-row"><button class="btn ghost" data-act="signOut"'+(C.busy?' disabled':'')+'>Sign out</button></div>'+
+    (C.msg?'<p class="msg err" role="status">'+esc(C.msg)+'</p>':'');
 }
-function refreshAcct(){
-  var el=$("#acct"); if(!el) return;
-  var previous=$("input",el), focused=document.activeElement===previous;
-  el.innerHTML=acctHTML();
-  var current=$("input",el);
-  if(previous && current && current.id===previous.id){
-    current.value=previous.value;
-    if(focused) current.focus();
-  }
+function refreshAcct(){ var el=$("#acct"); if(el && C.user) el.innerHTML=acctHTML(); }
+function setStatus(status){
+  C.status=status;
+  var el=$("#syncNote"), sl=syncLabel();
+  if(el){ el.className="sync "+sl[1]; el.textContent=sl[0]; }
 }
-function setStatus(s){ C.status=s; var el=$("#syncNote"); if(el){ var sl=syncLabel(); el.className="sync "+sl[1]; el.textContent=sl[0]; } }
-function say(msg, err){ C.msg=msg||""; C.msgErr=!!err; }
 
-function queueCloudSave(){ if(!C.uid || C.hold) return; clearTimeout(C.t); C.t=setTimeout(cloudSave, 800); }
+function mergeState(local, remote){
+  var merged=zeroState(local.nick), key;
+  [local,remote].forEach(function(state){
+    for(key in state.lessons) if(state.lessons[key]) merged.lessons[key]=true;
+    for(key in state.quiz){
+      var q=state.quiz[key], prev=merged.quiz[key], count=q.of||5;
+      if(!prev || count>(prev.of||5)) merged.quiz[key]={best:q.best||0,of:count,taken:Math.max(prev?prev.taken:0,q.taken||0)};
+      else merged.quiz[key]={best:count===(prev.of||5)?Math.max(prev.best,q.best||0):prev.best,of:prev.of||5,taken:Math.max(prev.taken,q.taken||0)};
+    }
+    [ "qa", "perfect", "badges", "earned" ].forEach(function(field){
+      Object.entries(state[field]).forEach(function(entry){
+        var current=merged[field][entry[0]];
+        if(entry[1] && (!current || entry[1]<current)) merged[field][entry[0]]=entry[1];
+      });
+    });
+    if(state.mixDay>merged.mixDay) merged.mixDay=state.mixDay;
+  });
+  merged.checkins=Array.from(new Map(remote.checkins.concat(local.checkins).map(function(x){ return [x.c+"|"+x.d,x]; })).values());
+  merged.log=remote.log;
+  var latest=local.last>remote.last || (local.last===remote.last && local.streak>=remote.streak) ? local : remote;
+  merged.streak=latest.streak;
+  merged.last=latest.last;
+  return merged;
+}
+
+async function fetchProfile(){
+  var result=await sb.rpc("get_ecolingo_profile");
+  if(result.error) throw result.error;
+  var row=result.data && result.data[0];
+  if(!row) throw new Error("No EcoLingo profile returned.");
+  return { state:norm(Object.assign({},row.state,{nick:row.nick})), revision:row.revision, epoch:row.epoch };
+}
+function replaceProgress(next){
+  S=next;
+  renderHeader(false);
+  if(!Q && !L) render();
+}
+function queueCloudSave(){
+  clearTimeout(C.t);
+  if(C.uid && C.changed!==C.synced) C.t=setTimeout(cloudSave,450);
+}
+async function sendProgress(uid){
+  for(var attempt=0; attempt<3; attempt++){
+    if(C.uid!==uid || C.changed===C.synced) return true;
+    var change=C.changed, resetAt=C.resetAt;
+    var result=await sb.rpc("save_ecolingo_profile",{
+      p_nick:S.nick,p_state:JSON.parse(JSON.stringify(S)),p_revision:C.revision,p_epoch:C.epoch,p_reset:!!resetAt
+    });
+    if(C.uid!==uid) return false;
+    if(result.error) throw result.error;
+    var saved=result.data && result.data[0];
+    if(saved){
+      C.revision=saved.revision;
+      C.epoch=saved.epoch;
+      C.synced=change;
+      if(C.resetAt===resetAt) C.resetAt=0;
+      persistLocal();
+      return true;
+    }
+
+    var latest=await fetchProfile();
+    if(C.uid!==uid) return false;
+    if(latest.epoch!==C.epoch && !C.resetAt){
+      C.synced=C.changed;
+      closeSheet(); Q=null;
+      replaceProgress(latest.state);
+      toast("Progress was reset on another device.");
+    } else if(!C.resetAt) {
+      replaceProgress(mergeState(S,latest.state));
+    }
+    C.revision=latest.revision;
+    C.epoch=latest.epoch;
+    persistLocal();
+  }
+  throw new Error("Progress changed repeatedly on another device.");
+}
 function cloudSave(){
-  clearTimeout(C.t); C.t=null;
-  if(!C.uid || C.hold) return Promise.resolve();
-  var uid=C.uid; setStatus("syncing");
-  return sb.from("profiles").upsert({ id:uid, nick:S.nick, state:S }).then(function(r){
-    if(uid!==C.uid) return;
-    if(r.error){ console.warn("EcoLingo save:", r.error); setStatus("error"); return; }
-    setStatus("synced"); refreshShared();
-  }, function(e){ console.warn("EcoLingo save:", e); setStatus("error"); });
+  clearTimeout(C.t);
+  if(C.inflight) return C.inflight;
+  if(!C.uid || C.changed===C.synced) return Promise.resolve();
+  setStatus("syncing");
+  var uid=C.uid;
+  C.inflight=sendProgress(uid).then(function(saved){
+    if(C.uid!==uid || !saved) return;
+    setStatus(C.changed===C.synced?"synced":"syncing");
+    refreshShared();
+    if(C.changed!==C.synced) queueCloudSave();
+  }).catch(function(error){
+    if(C.uid!==uid) return;
+    console.warn("EcoLingo progress:",error.message);
+    setStatus("error");
+  }).finally(function(){ C.inflight=null; });
+  return C.inflight;
 }
-
-/* combine two progress snapshots without losing anything */
-function mergeState(a, b){
-  var m=zeroState(a.nick||b.nick), k;
-  [a,b].forEach(function(s){
-    for(k in (s.lessons||{})) if(s.lessons[k]) m.lessons[k]=true;
-    for(k in (s.quiz||{})){ var q=s.quiz[k], p=m.quiz[k], qo=q.of||5;
-      if(!p || qo>(p.of||5)) m.quiz[k]={best:q.best||0, of:qo, taken:Math.max(p?p.taken:0,q.taken||0)};
-      else m.quiz[k]={best:(qo===(p.of||5))?Math.max(p.best,q.best||0):p.best, of:p.of||5, taken:Math.max(p.taken,q.taken||0)}; }
-    for(k in (s.qa||{})) if(s.qa[k] && (!m.qa[k] || s.qa[k]<m.qa[k])) m.qa[k]=s.qa[k];
-    for(k in (s.perfect||{})) if(!m.perfect[k] || s.perfect[k]<m.perfect[k]) m.perfect[k]=s.perfect[k];
-    if((s.mixDay||"")>m.mixDay) m.mixDay=s.mixDay;
-    if(s.onb) m.onb=true;
-    for(k in (s.badges||{})) if(!m.badges[k] || s.badges[k]<m.badges[k]) m.badges[k]=s.badges[k];
+async function refreshShared(){
+  if(!C.uid) return;
+  var uid=C.uid, ticket=++C.request;
+  var replies=await Promise.allSettled([
+    sb.rpc("get_ecolingo_leaderboard",{p_period:"week"}),
+    sb.rpc("get_ecolingo_leaderboard",{p_period:"all"}),
+    sb.rpc("get_ecolingo_community")
+  ]);
+  if(C.uid!==uid || ticket!==C.request) return;
+  var previous=JSON.stringify([C.board,C.boardError,C.community]);
+  ["week","all"].forEach(function(period,i){
+    var response=replies[i].value;
+    C.boardError[period]=!response || !!response.error;
+    if(!C.boardError[period]) C.board[period]=response.data||[];
   });
-  var seen={}; a.checkins.concat(b.checkins).forEach(function(x){ var id=x.c+"|"+x.d; if(!seen[id]){ seen[id]=1; m.checkins.push({c:x.c,d:x.d}); } });
-  var days={}; a.log.concat(b.log).forEach(function(x){ days[x.d]=Math.max(days[x.d]||0, x.n); });
-  m.log=Object.keys(days).sort().map(function(d){ return {d:d,n:days[d]}; });
-  var w=(a.last||"")>(b.last||"") ? a : ((b.last||"")>(a.last||"") ? b : (a.streak>=b.streak?a:b));
-  m.streak=w.streak||0; m.last=w.last||"";
-  return m;
+  var community=replies[2].value;
+  if(community && !community.error && community.data!==null) C.community=Number(community.data);
+  if(previous===JSON.stringify([C.board,C.boardError,C.community])) return;
+  if(tab==="leaderboard" && !L) render();
+  if(tab==="challenges"){
+    var comm=Math.max(C.community||0,weekCheckins()), n=$("#commN"), b=$("#commBar");
+    if(n) n.textContent=comm+" / "+COMMUNITY_GOAL;
+    if(b) b.style.setProperty("--w",Math.min(100,Math.round(comm/COMMUNITY_GOAL*100))+"%");
+  }
+  checkBadges();
 }
 
-function adoptUser(user){
-  C.user=user; C.uid=user.id; setStatus("syncing"); refreshAcct();
-  return sb.from("profiles").select("nick,state").eq("id", user.id).maybeSingle().then(function(r){
-    if(C.uid!==user.id) return;
-    if(r.error) throw r.error;
-    if(r.data && r.data.state && r.data.state.v===1){
-      var before=JSON.stringify(S), m=mergeState(norm(r.data.state), S);
-      m.nick = r.data.nick || m.nick;
-      if(JSON.stringify(m)!==before){ S=m; persistLocal(); shownPts=null; renderHeader(false); if(!Q && !L) render(); var ni=$("#nick"); if(ni && document.activeElement!==ni) ni.value=S.nick; }
-    }
-    return cloudSave();
-  }).then(function(){ refreshAcct(); }, function(e){ console.warn("EcoLingo sync:", e); setStatus("error"); });
+function leaveApp(failed){
+  clearTimeout(C.t);
+  C.uid=null;
+  C.user=null;
+  S=zeroState();
+  $(".stage").hidden=true;
+  var home=new URL("./",location.href);
+  if(failed) home.searchParams.set("signin","failed");
+  home.hash="sign-in";
+  location.replace(home.href);
 }
-
-function onSession(ev, session){
-  if(session && session.user){
-    C.user=session.user;
-    if(C.uid!==session.user.id) adoptUser(session.user); else refreshAcct();
-    if(accountEntry && !session.user.is_anonymous && session.user.email){
-      accountEntry=false;
-      if($(".account-entry")) closeSheet();
-      try{
-        sessionStorage.removeItem("ecolingo-web-auth");
-        var clean = new URL(location.href);
-        ["signin","code","error","error_code","error_description"].forEach(function(key){ clean.searchParams.delete(key); });
-        history.replaceState(null,"",clean.href);
-      }catch(e){}
-    }
-  } else if(ev==="INITIAL_SESSION" || ev==="SIGNED_OUT"){
-    C.user=null; C.uid=null;
-    if(accountEntry && ev==="INITIAL_SESSION"){ setStatus("local"); refreshAcct(); }
-    else signInGuest();
+async function signOut(){
+  C.busy=true;
+  C.msg="";
+  refreshAcct();
+  try{
+    await cloudSave();
+    if(C.changed!==C.synced && C.status!=="error") await cloudSave();
+    var result=await sb.auth.signOut({scope:"local"});
+    if(result.error) throw result.error;
+    leaveApp();
+  }catch(error){
+    C.busy=false;
+    C.msg="Could not sign out. Please try again.";
+    refreshAcct();
   }
 }
-function signInGuest(){
-  setStatus("connecting");
-  sb.auth.signInAnonymously().then(function(r){
-    if(r.error){ console.warn("EcoLingo: guest sign-in failed. Is 'Allow anonymous sign-ins' on in Supabase?", r.error); setStatus("error"); }
-  }, function(e){ console.warn(e); setStatus("error"); });
-}
 
-var lastShared="";
-function refreshShared(){
-  if(!sb) return;
-  Promise.all([ sb.rpc("get_leaderboard",{mode:"week"}), sb.rpc("get_leaderboard",{mode:"all"}), sb.rpc("community_week_checkins") ]).then(function(rs){
-    if(!rs[0].error) C.board.week=rs[0].data||[];
-    if(!rs[1].error) C.board.all=rs[1].data||[];
-    if(!rs[2].error && typeof rs[2].data==="number") C.community=rs[2].data;
-    var sig=JSON.stringify([C.board, C.community]); if(sig===lastShared) return; lastShared=sig;
-    if(tab==="leaderboard" && !L) render();
-    if(tab==="challenges"){
-      var wc=weekCheckins(), comm=Math.max(C.community==null?wc:C.community, wc), n=$("#commN"), b=$("#commBar");
-      if(n) n.textContent=comm+" / "+COMMUNITY_GOAL; if(b) b.style.setProperty("--w", Math.min(100, Math.round(comm/COMMUNITY_GOAL*100))+"%");
+function gateMessage(title, note, retry){
+  $("#gate-title").textContent=title;
+  $("#gate-status").textContent=note;
+  $("#gate-retry").hidden=!retry;
+}
+async function boot(){
+  var callback=new URL(location.href);
+  var authReturn=callback.searchParams.has("code");
+  if(["error","error_code","error_description"].some(function(key){ return callback.searchParams.has(key); })
+      || /^#(?:error|error_code)=/.test(callback.hash)){
+    leaveApp(true);
+    return;
+  }
+  if(!sb){
+    gateMessage("EcoLingo is unavailable","Google sign-in could not load. Reconnect and try again.",true);
+    return;
+  }
+  gateMessage("Opening EcoLingo","Checking your Google account…",false);
+  try{
+    var session=await sb.auth.getSession();
+    if(session.error) throw session.error;
+    if(!session.data.session){ leaveApp(authReturn); return; }
+    var result=await sb.auth.getUser();
+    if(result.error) throw result.error;
+    var user=result.data.user;
+    if(!auth.googleUser(user)){ leaveApp(true); return; }
+    var profile=await fetchProfile();
+    C.uid=user.id;
+    C.user=user;
+    C.revision=profile.revision;
+    C.epoch=profile.epoch;
+    var pending=readPending();
+    S=profile.state;
+    if(pending && pending.state && pending.epoch===C.epoch){
+      S=pending.reset ? norm(pending.state) : mergeState(norm(pending.state),S);
+      C.changed=1;
+      if(pending.reset) C.resetAt=1;
     }
-    checkBadges();
-  }, function(e){ console.warn("EcoLingo leaderboard:", e); });
-}
-
-function sendCode(raw){
-  var email=String(raw||"").trim().toLowerCase();
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ say("Please enter a valid email address.", true); refreshAcct(); return; }
-  C.busy=true; say("Sending…"); refreshAcct();
-  if(webMode){ try{ sessionStorage.setItem("ecolingo-web-auth","1"); }catch(e){} }
-  else { try{ sessionStorage.removeItem("ecolingo-web-auth"); }catch(e){} }
-  sb.auth.signInWithOtp({ email:email, options:{ shouldCreateUser:true, emailRedirectTo:new URL("./",location.href).href } }).then(function(r){
-    C.busy=false;
-    if(r.error){ say(r.error.message, true); }
-    else {
-      C.otpEmail=email; say("Email sent. Check your inbox (and spam).");
-      /* the guest row is removed now so you don't appear twice after the link signs you in;
-         progress stays on this device and is merged into the account when you come back */
-      if(C.user && C.user.is_anonymous && C.uid){ clearTimeout(C.t); C.hold=true; sb.from("profiles").delete().eq("id", C.uid).then(function(){}, function(){}); }
+    setStatus(C.changed===C.synced?"synced":"syncing");
+    persistLocal();
+    $("#app-gate").hidden=true;
+    $(".stage").hidden=false;
+    renderHeader(false);
+    var current=callback.hash.slice(1);
+    go(TABS.indexOf(current)>=0 ? current : "learn");
+    renderGetApp();
+    refreshShared();
+    if(C.changed!==C.synced) queueCloudSave();
+  }catch(error){
+    console.warn("EcoLingo connection:",error.message);
+    if(error.code==="42501" || error.status===401 || error.status===403){
+      leaveApp(true);
+      return;
     }
-    refreshAcct(); var i=$(C.otpEmail?"#otp":"#email"); if(i) i.focus();
-  });
+    gateMessage("Could not connect to EcoLingo","Your account and progress could not be loaded. Please try again.",true);
+  }
 }
-function verifyCode(raw){
-  var code=String(raw||"").replace(/\D/g,"");
-  if(code.length<6){ say("Please enter the full code from the email.", true); refreshAcct(); return; }
-  var guestId = (C.user && C.user.is_anonymous) ? C.uid : null;
-  C.busy=true; say("Checking…"); refreshAcct();
-  /* remove the guest row first so the same person does not appear twice on the leaderboard;
-     progress is still in S and gets merged into the account right after */
-  clearTimeout(C.t); C.hold=true;
-  var pre = guestId ? sb.from("profiles").delete().eq("id", guestId) : Promise.resolve({});
-  Promise.resolve(pre).then(function(){
-    return sb.auth.verifyOtp({ email:C.otpEmail, token:code, type:"email" });
-  }).then(function(r){
-    C.busy=false; C.hold=false;
-    if(r.error){ say(r.error.message, true); refreshAcct(); cloudSave(); return; }
-    C.otpEmail=""; say("You're signed in. Progress from this device was added to your account.");
-    if(r.data && r.data.session) onSession("SIGNED_IN", r.data.session); else refreshAcct();
-    toast("Signed in");
-  }, function(e){ C.busy=false; C.hold=false; say(String(e&&e.message||e), true); refreshAcct(); cloudSave(); });
-}
-function signOut(){
-  C.busy=true; refreshAcct();
-  var flush = C.t ? cloudSave() : Promise.resolve();
-  flush.then(function(){ return sb.auth.signOut(); }).then(function(){
-    C.busy=false; say("");
-    var nick=S.nick; S=zeroState(nick); persistLocal(); C.board={week:null,all:null}; lastShared="";
-    shownPts=null; renderHeader(false); closeSheet(); render(); toast("Signed out");
-    /* SIGNED_OUT event starts a fresh guest session */
-  });
-}
-
-function cloudBoot(){
-  $$("[data-cloud-hide]").forEach(function(el){ el.remove(); });
-  sb.auth.onAuthStateChange(function(ev, session){ setTimeout(function(){ onSession(ev, session); }, 0); });
-  document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="hidden" && C.t) cloudSave(); });
-  window.addEventListener("online", function(){ if(C.uid) cloudSave(); });
-}
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="hidden") cloudSave();
+  else if(tab==="leaderboard") refreshShared();
+});
+window.addEventListener("online",function(){ cloudSave().then(refreshShared); });
+setInterval(function(){ if(tab==="leaderboard" && document.visibilityState==="visible") refreshShared(); },30000);
 
 /* ---------- sound + haptics (synthesised, no audio files) ---------- */
 var SFX=(function(){
@@ -1508,40 +1521,17 @@ function installApp(){
 window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); installEvt=e; renderGetApp(); });
 window.addEventListener("appinstalled", function(){ installEvt=null; renderGetApp(); toast("EcoLingo installed"); });
 
-/* ---------- first-run welcome ---------- */
-function maybeWelcome(){
-  if(S.onb || webMode) return;
-  if(totalPts()>0 || lessonsDone()>0){ S.onb=true; save(); return; }
-  if($("#sheet").innerHTML || $("#modal").innerHTML || Q) return;
-  var feats=[["learn","#19486A","<b>"+UNITS.length+" short units</b> that grow your SDG plant"],["quiz","#C5192D","<b>"+totalQs()+" quiz questions</b> with instant explanations"],["leaf","#3F7E44","<b>Weekly eco-actions</b> and a live leaderboard"]];
-  $("#sheet").innerHTML='<div class="scrim"></div><div class="bsheet welcome" role="dialog" aria-modal="true" aria-labelledby="wel-t">'+
-    '<span class="wel-mark">'+ic("sprout")+'</span><h2 id="wel-t">Welcome to EcoLingo</h2>'+
-    '<p class="note">Learn the UN Sustainable Development Goals in two-minute lessons and turn them into everyday habits.</p>'+
-    '<ul class="wel-list">'+feats.map(function(f){ return '<li><span class="ico" style="background:'+f[1]+'">'+ic(f[0])+'</span><span>'+f[2]+'</span></li>'; }).join("")+'</ul>'+
-    '<form id="welForm" class="nick-row"><label class="sr" for="welNick">Nickname</label><input id="welNick" maxlength="16" autocomplete="off" placeholder="Pick a nickname"><button class="btn" type="submit">Let’s go</button></form>'+
-    '<p class="fine">Your nickname appears on the leaderboard. You can change it any time.</p></div>';
-}
-function finishWelcome(){
-  var v=($("#welNick").value||"").trim().replace(/\s+/g," ").slice(0,16);
-  if(v) S.nick=v;
-  S.onb=true; save(); renderHeader(false); closeSheet(); render();
-  SFX.play("complete"); SFX.buzz(20);
-  toast("Welcome, "+S.nick+"!");
-}
-
 /* ---------- boot ---------- */
-if(C.on) cloudBoot();
-if(accountEntry) openAccountEntry();
+$("#gate-retry").addEventListener("click", boot);
+if(sb) sb.auth.onAuthStateChange(function(event, session){
+  if(C.uid && (event==="SIGNED_OUT" || (session && session.user.id!==C.uid))) leaveApp();
+});
+window.addEventListener("pageshow", function(event){ if(event.persisted) location.reload(); });
 if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
   window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
 }
 fillStaticIcons();
-renderHeader(false);
-var h=(location.hash||"").replace("#","");
-go(TABS.indexOf(h)>=0 ? h : "learn");
-renderGetApp();
-setTimeout(checkBadges, 1200);
-setTimeout(maybeWelcome, C.on ? 1500 : 600);
+boot();
 })();
 </script>
 

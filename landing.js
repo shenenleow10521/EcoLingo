@@ -1,52 +1,42 @@
 "use strict";
 
-const form = document.getElementById("guest-form");
-const nameField = document.getElementById("guest-name");
-const errorText = document.getElementById("guest-error");
-const guestKey = "ecolingo-classroom-player";
+const signInButton = document.getElementById("google-sign-in");
+const signInStatus = document.getElementById("sign-in-status");
+const auth = window.EcoLingoAuth;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+let returningPlayer = false;
 
-function showGuestError(message) {
-  errorText.textContent = message;
-  errorText.hidden = !message;
-  if (message) nameField.setAttribute("aria-invalid", "true");
-  else nameField.removeAttribute("aria-invalid");
+const params = new URLSearchParams(location.search);
+if (params.get("signin") === "failed" || params.has("error") || params.has("error_code") || params.has("error_description")) {
+  signInStatus.textContent = "Google sign-in could not be completed. Please try again.";
 }
 
-nameField.addEventListener("input", () => showGuestError(""));
-
-form.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const name = nameField.value.trim().replace(/\s+/g, " ");
-  if (!name) {
-    showGuestError("Enter your name or a nickname to play.");
-    nameField.focus();
+signInButton.addEventListener("click", async () => {
+  if (returningPlayer) {
+    location.assign(auth.appUrl().href);
     return;
   }
-
+  signInButton.disabled = true;
+  signInStatus.textContent = "Opening Google…";
   try {
-    const previous = JSON.parse(sessionStorage.getItem(guestKey) || "null");
-    if (previous?.id) {
-      sessionStorage.removeItem("ecolingo-classroom-progress-" + previous.id);
-      sessionStorage.removeItem("ecolingo-classroom-auth-" + previous.id);
-    }
-    const id = Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, "0")).join("");
-    sessionStorage.setItem(guestKey, JSON.stringify({ id, name }));
-  } catch {
-    showGuestError("Allow site storage in your browser to start a guest session.");
-    return;
+    if (!auth) throw new Error("Sign-in is unavailable.");
+    await auth.signIn();
+  } catch (error) {
+    console.warn("EcoLingo sign-in:", error.message);
+    signInStatus.textContent = "Google sign-in is unavailable right now. Please try again.";
+    signInButton.disabled = false;
   }
-
-  location.assign("app.html?mode=guest");
 });
 
-document.querySelectorAll(".focus-name").forEach((link) => {
-  link.addEventListener("click", (event) => {
-    event.preventDefault();
-    nameField.focus({ preventScroll: true });
-    form.scrollIntoView({ block: "center" });
-  });
-});
+signInButton.disabled = false;
+
+if (auth?.client) {
+  auth.client.auth.getSession().then(({ data }) => {
+    if (!auth.googleUser(data.session?.user)) return;
+    returningPlayer = true;
+    signInButton.querySelector("span").textContent = "Continue playing";
+  }).catch(() => {});
+}
 
 if ("IntersectionObserver" in window && !reducedMotion.matches) {
   const reveal = new IntersectionObserver((entries) => {

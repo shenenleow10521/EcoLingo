@@ -1,7 +1,7 @@
 {
   "name": "EcoLingo",
   "short_name": "EcoLingo",
-  "description": "A gamified SDG learning app for UM students: short lessons, quick quizzes and weekly eco-actions.",
+  "description": "A gamified SDG learning app for everyone: short lessons, quick quizzes and weekly eco-actions.",
   "id": "./",
   "start_url": "./app.html",
   "scope": "./",

@@ -12,22 +12,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="landing.css">
   <script>
-    // Keep older quiz links, email callbacks and installed launchers working.
-    const oldUrl = new URL(location.href);
-    const oldTab = /^#(learn|quiz|badges|challenges|leaderboard)$/.test(oldUrl.hash);
-    const authReturn = ["code", "error", "error_code", "error_description"].some((key) => oldUrl.searchParams.has(key))
-      || /^#(?:access_token|error|error_code)=/.test(oldUrl.hash);
-    if (authReturn || oldTab || matchMedia("(display-mode: standalone)").matches || navigator.standalone === true) {
-      const appUrl = new URL("app.html", oldUrl);
-      appUrl.search = oldUrl.search;
-      appUrl.hash = oldUrl.hash;
-      if (authReturn) {
-        try { if (sessionStorage.getItem("ecolingo-web-auth") === "1") appUrl.searchParams.set("mode", "web"); } catch {}
-        if (appUrl.searchParams.get("mode") === "web") appUrl.searchParams.set("signin", "1");
-      }
-      location.replace(appUrl.href);
+    // Keep bookmarks and installed launchers on the same authenticated entry point.
+    const entry = new URL(location.href);
+    const appTab = /^#(learn|quiz|badges|challenges|leaderboard)$/.test(entry.hash);
+    const installed = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    if (entry.searchParams.has("code") || appTab || (installed && entry.hash !== "#sign-in")) {
+      const app = new URL("app.html", entry);
+      app.search = entry.search;
+      app.hash = entry.hash;
+      location.replace(app.href);
     }
   </script>
+  <script src="config.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="auth.js" defer></script>
   <script src="landing.js" defer></script>
   <script src="growth.js" defer></script>
 </head>
@@ -47,7 +45,7 @@
       <nav class="nav" aria-label="Main navigation">
         <a href="#sdg-explorer">Explore the SDGs</a><a href="#learning-path">Learning path</a>
       </nav>
-      <a class="signin" href="app.html?mode=web&amp;signin=1">Sign in <svg class="icon"><use href="#arrow-up-right"/></svg></a>
+      <a class="signin" href="#sign-in">Sign in <svg class="icon"><use href="#arrow-up-right"/></svg></a>
     </div>
   </header>
 
@@ -60,15 +58,19 @@
           <p class="eyebrow enter" style="--delay:.04s"><span></span> An SDG learning game</p>
           <h1 id="hero-title"><span><span>Learn it.</span></span><span><em>Grow it.</em></span></h1>
           <p class="hero-deck enter" style="--delay:.22s">Grow a plant as you complete lessons, test your knowledge with quick quizzes, and turn what you learn into greener habits.</p>
-          <form id="guest-form" class="guest-form enter" style="--delay:.31s">
-            <label for="guest-name">Your name or nickname</label>
-            <div class="guest-entry">
-              <input id="guest-name" type="text" placeholder="e.g. Alex" maxlength="16" autocomplete="off" required aria-describedby="guest-note guest-error">
-              <button class="primary" type="submit">Play as guest <svg class="icon"><use href="#arrow"/></svg></button>
-            </div>
-            <p id="guest-note" class="guest-note">No email needed. Your name may appear on the leaderboard.</p>
-            <p id="guest-error" class="guest-error" role="alert" hidden></p>
-          </form>
+          <div id="sign-in" class="sign-in-panel enter" style="--delay:.31s">
+            <button id="google-sign-in" class="google-sign-in" type="button" disabled aria-describedby="sign-in-note">
+              <svg class="google-mark" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#4285f4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.1v5.1h6.6c3.9-3.6 6.1-8.8 6.1-14.9Z"/>
+                <path fill="#34a853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.2 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z"/>
+                <path fill="#fbbc05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z"/>
+                <path fill="#ea4335" d="M24 12c3 0 5.6 1 7.7 3l5.8-5.8A19 19 0 0 0 24 4 20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z"/>
+              </svg>
+              <span>Sign in with Google</span><svg class="icon"><use href="#arrow"/></svg>
+            </button>
+            <p id="sign-in-note" class="sign-in-note">Use any Google account to play and save your progress.</p>
+            <p id="sign-in-status" class="sign-in-status" role="status"></p>
+          </div>
           <dl class="hero-stats enter" style="--delay:.39s">
             <div><dt>Learning units</dt><dd>4</dd></div>
             <div><dt>Quiz questions</dt><dd>60</dd></div>
@@ -167,7 +169,7 @@
           <article class="unit-card reveal" style="--unit:#edc876;--reveal-delay:.16s"><span>SDG <b>12</b></span><h3>Use less, waste less</h3><p>Make better choices about food, water and what you buy.</p></article>
           <article class="unit-card reveal" style="--unit:#b4d975;--reveal-delay:.24s"><span>SDG <b>13</b></span><h3>Act on campus</h3><p>Try everyday actions that reduce your climate impact.</p></article>
         </div>
-        <a class="text-link focus-name reveal" href="#guest-form">Start the full game <svg class="icon"><use href="#arrow-up-right"/></svg></a>
+        <a class="text-link reveal" href="#sign-in">Start the full game <svg class="icon"><use href="#arrow-up-right"/></svg></a>
       </div>
     </section>
   </main>
