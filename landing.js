@@ -61,17 +61,3 @@ if ("IntersectionObserver" in window && !reducedMotion.matches) {
     reveal.observe(element);
   });
 }
-
-const answers = document.querySelectorAll("[data-answer]");
-const feedback = document.querySelector(".sample-feedback");
-answers.forEach((button) => {
-  button.setAttribute("aria-pressed", "false");
-  button.addEventListener("click", () => {
-    answers.forEach((option) => option.setAttribute("aria-pressed", String(option === button)));
-    const correct = button.dataset.answer === "right";
-    feedback.dataset.result = correct ? "correct" : "retry";
-    feedback.textContent = correct
-      ? "Correct. Planning meals makes it easier to buy only what you’ll use."
-      : "Try again. Which option helps you buy only what you’ll use?";
-  });
-});
