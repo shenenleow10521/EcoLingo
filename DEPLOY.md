@@ -1,12 +1,12 @@
-# EcoLingo Google 登录与排行榜
+# EcoLingo 登录与排行榜
 
-新版首页使用 Google OAuth。普通 Gmail 或其他可用的 Google 账号都能登录。
-排行榜显示昵称、同步后的积分和名次，按马来西亚时间每周一开始新一周。
+首页支持 Google OAuth 和游客昵称。两种玩家共用同一个排行榜，按马来西亚时间每周一开始新一周。
+游客使用本浏览器保存的随机凭据恢复自己的进度，数据库只保存该凭据的哈希。清除浏览器数据后，游客仍可在榜上看到原分数，但无法恢复原档案。
 
 ## Supabase
 
 1. 新 [Supabase 项目](https://supabase.com/dashboard/project/xindohtmqpwzgwdggdwx) 已应用 `supabase/google_accounts.sql`，迁移版本为 `20261111144210`。
-2. 原站点的账号和积分仍在原 Supabase 项目。新版连接的新项目目前没有玩家记录。
+2. 在同一项目执行 `supabase/guest_players.sql`。原站点使用另一个 Supabase 项目，旧账号和积分留在原项目。
 3. 在 **Authentication → URL Configuration** 加入确切的回跳网址
    - Sites 版：`https://ecolingo-pc-preview.leowshenen.chatgpt.site/app.html`
    - 如发布到 GitHub Pages：`https://shenenleow10521.github.io/EcoLingo/app.html`
@@ -23,7 +23,7 @@
 
 ## 发布前验证
 
-- 在无痕窗口直接开 `app.html`，应回首页要求 Google 登录。
-- 用两个不同 Google 账号进入，分别完成一项课程或挑战。确认各自的昵称和分数同时出现在 **This week** 和 **All time**，并能在另一浏览器重新登入同账号看回进度。
+- 在无痕窗口直接开 `app.html`，应回到首页的登录和游客选项。
+- 分别用 Google 和游客模式完成一项课程或挑战。确认两位玩家同时出现在 **This week** 和 **All time**。刷新游客页面验证进度恢复，再用另一浏览器验证 Google 账号进度恢复。
 - 登出并切换账号，确认上一位玩家的数据没有出现在下一位玩家的工作区。
 - 新版排行榜按去重后的学习事件计算积分。应用提交这些学习事件，排行榜仅返回昵称、分数和名次。

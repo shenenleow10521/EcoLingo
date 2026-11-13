@@ -45,7 +45,7 @@
       <nav class="nav" aria-label="Main navigation">
         <a href="#sdg-explorer">Explore the SDGs</a><a href="#learning-path">Learning path</a>
       </nav>
-      <a class="signin" href="#sign-in">Sign in <svg class="icon"><use href="#arrow-up-right"/></svg></a>
+      <a class="signin" href="#sign-in">Play EcoLingo <svg class="icon"><use href="#arrow-up-right"/></svg></a>
     </div>
   </header>
 
@@ -66,10 +66,18 @@
                 <path fill="#fbbc05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z"/>
                 <path fill="#ea4335" d="M24 12c3 0 5.6 1 7.7 3l5.8-5.8A19 19 0 0 0 24 4 20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z"/>
               </svg>
-              <span>Sign in with Google</span><svg class="icon"><use href="#arrow"/></svg>
+              <span>Continue with Google</span><svg class="icon"><use href="#arrow"/></svg>
             </button>
-            <p id="sign-in-note" class="sign-in-note">Use any Google account to play and save your progress.</p>
             <p id="sign-in-status" class="sign-in-status" role="status"></p>
+            <form id="guest-form" class="guest-form">
+              <label for="guest-name">Guest nickname</label>
+              <div class="guest-fields">
+                <input id="guest-name" name="nickname" maxlength="16" placeholder="Your nickname" required>
+                <button class="guest-play" type="submit">Play as guest <svg class="icon"><use href="#arrow"/></svg></button>
+              </div>
+            </form>
+            <p id="sign-in-note" class="sign-in-note">Both modes save scores to the same leaderboard. Guest progress is linked to this browser.</p>
+            <p id="guest-status" class="sign-in-status" role="status"></p>
           </div>
           <dl class="hero-stats enter" style="--delay:.39s">
             <div><dt>Learning units</dt><dd>4</dd></div>

@@ -459,7 +459,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 <body>
 <main id="app-gate" class="app-gate" aria-labelledby="gate-title">
   <h1 id="gate-title">Opening EcoLingo</h1>
-  <p id="gate-status" role="status">Checking your Google account…</p>
+  <p id="gate-status" role="status">Loading your player profile…</p>
   <div class="gate-actions">
     <button class="btn" id="gate-retry" type="button" hidden>Try again</button>
     <a class="btn ghost" href="./#sign-in">Back to sign-in</a>
@@ -1144,7 +1144,7 @@ function renderBoard(){
 function openProfile(){
   $("#sheet").innerHTML = '<div class="scrim" data-act="closeSheet"></div><div class="bsheet" role="dialog" aria-modal="true" aria-labelledby="pf-t">'+
     '<div class="grabber"></div><h2 id="pf-t" class="h2">Your profile</h2>'+
-    '<p class="note">Your nickname is shown on the leaderboard. Your Google email stays private.</p>'+
+    '<p class="note">Your nickname is shown on the leaderboard.'+(C.guest?'':' Your Google email stays private.')+'</p>'+
     '<form id="nickForm" class="nick-row"><label class="sr" for="nick">Nickname</label><input id="nick" maxlength="16" autocomplete="off" value="'+esc(S.nick)+'"><button class="btn" type="submit">Save</button></form>'+
     '<div class="divider"></div><p class="eyebrow">Account and sync</p><div class="acct" id="acct">'+acctHTML()+'</div>'+
     '<div class="divider"></div><p class="eyebrow">App</p>'+
@@ -1212,8 +1212,9 @@ function syncLabel(){
 function acctHTML(){
   var sl=syncLabel();
   return '<p class="sync '+sl[1]+'" id="syncNote">'+sl[0]+'</p>'+
-    '<p class="note">Signed in with Google as <strong>'+esc(C.user.email||"your Google account")+'</strong>.</p>'+
-    '<div class="ctl-row"><button class="btn ghost" data-act="signOut"'+(C.busy?' disabled':'')+'>Sign out</button></div>'+
+    (C.guest ? '<p class="note">Playing as a guest on this browser.</p>'
+      : '<p class="note">Signed in with Google as <strong>'+esc(C.user.email||"your Google account")+'</strong>.</p>')+
+    '<div class="ctl-row"><button class="btn ghost" data-act="signOut"'+(C.busy?' disabled':'')+'>'+(C.guest?'Back to homepage':'Sign out')+'</button></div>'+
     (C.msg?'<p class="msg err" role="status">'+esc(C.msg)+'</p>':'');
 }
 function refreshAcct(){ var el=$("#acct"); if(el && C.user) el.innerHTML=acctHTML(); }
@@ -1249,11 +1250,11 @@ function mergeState(local, remote){
 }
 
 async function fetchProfile(){
-  var result=await sb.rpc("get_ecolingo_profile");
+  var result=await (C.guest ? auth.guestProfile(C.guest.key) : sb.rpc("get_ecolingo_profile"));
   if(result.error) throw result.error;
   var row=result.data && result.data[0];
   if(!row) throw new Error("No EcoLingo profile returned.");
-  return { state:norm(Object.assign({},row.state,{nick:row.nick})), revision:row.revision, epoch:row.epoch };
+  return { id:row.player_id, state:norm(Object.assign({},row.state,{nick:row.nick})), revision:row.revision, epoch:row.epoch };
 }
 function replaceProgress(next){
   S=next;
@@ -1268,13 +1269,19 @@ async function sendProgress(uid){
   for(var attempt=0; attempt<3; attempt++){
     if(C.uid!==uid || C.changed===C.synced) return true;
     var change=C.changed, resetAt=C.resetAt;
-    var result=await sb.rpc("save_ecolingo_profile",{
+    var args={
       p_nick:S.nick,p_state:JSON.parse(JSON.stringify(S)),p_revision:C.revision,p_epoch:C.epoch,p_reset:!!resetAt
-    });
+    };
+    if(C.guest) args.p_guest_key=C.guest.key;
+    var result=await sb.rpc(C.guest?"save_ecolingo_guest_profile":"save_ecolingo_profile",args);
     if(C.uid!==uid) return false;
     if(result.error) throw result.error;
     var saved=result.data && result.data[0];
     if(saved){
+      if(C.guest){
+        C.guest.nick=args.p_nick;
+        try{ auth.storeGuest(C.guest); }catch(error){}
+      }
       C.revision=saved.revision;
       C.epoch=saved.epoch;
       C.synced=change;
@@ -1321,9 +1328,9 @@ async function refreshShared(){
   if(!C.uid) return;
   var uid=C.uid, ticket=++C.request;
   var replies=await Promise.allSettled([
-    sb.rpc("get_ecolingo_leaderboard",{p_period:"week"}),
-    sb.rpc("get_ecolingo_leaderboard",{p_period:"all"}),
-    sb.rpc("get_ecolingo_community")
+    sharedBoard("week"),
+    sharedBoard("all"),
+    C.guest ? sb.rpc("get_ecolingo_guest_community",{p_guest_key:C.guest.key}) : sb.rpc("get_ecolingo_community")
   ]);
   if(C.uid!==uid || ticket!==C.request) return;
   var previous=JSON.stringify([C.board,C.boardError,C.community]);
@@ -1343,11 +1350,16 @@ async function refreshShared(){
   }
   checkBadges();
 }
+function sharedBoard(period){
+  return C.guest ? sb.rpc("get_ecolingo_guest_leaderboard",{p_guest_key:C.guest.key,p_period:period})
+    : sb.rpc("get_ecolingo_leaderboard",{p_period:period});
+}
 
 function leaveApp(failed){
   clearTimeout(C.t);
   C.uid=null;
   C.user=null;
+  C.guest=null;
   S=zeroState();
   $(".stage").hidden=true;
   var home=new URL("./",location.href);
@@ -1362,8 +1374,10 @@ async function signOut(){
   try{
     await cloudSave();
     if(C.changed!==C.synced && C.status!=="error") await cloudSave();
-    var result=await sb.auth.signOut({scope:"local"});
-    if(result.error) throw result.error;
+    if(!C.guest){
+      var result=await sb.auth.signOut({scope:"local"});
+      if(result.error) throw result.error;
+    }
     leaveApp();
   }catch(error){
     C.busy=false;
@@ -1386,21 +1400,29 @@ async function boot(){
     return;
   }
   if(!sb){
-    gateMessage("EcoLingo is unavailable","Google sign-in could not load. Reconnect and try again.",true);
+    gateMessage("EcoLingo is unavailable","Could not connect to EcoLingo. Reconnect and try again.",true);
     return;
   }
-  gateMessage("Opening EcoLingo","Checking your Google account…",false);
+  gateMessage("Opening EcoLingo","Loading your player profile…",false);
   try{
-    var session=await sb.auth.getSession();
-    if(session.error) throw session.error;
-    if(!session.data.session){ leaveApp(authReturn); return; }
-    var result=await sb.auth.getUser();
-    if(result.error) throw result.error;
-    var user=result.data.user;
-    if(!auth.googleUser(user)){ leaveApp(true); return; }
+    var mode=callback.searchParams.get("mode");
+    var user=null;
+    C.guest=mode==="guest" && !authReturn ? auth.readGuest() : null;
+    if(mode==="guest" && !C.guest){ leaveApp(); return; }
+    if(!C.guest){
+      var session=await sb.auth.getSession();
+      if(session.error) throw session.error;
+      if(session.data.session){
+        var result=await sb.auth.getUser();
+        if(result.error) throw result.error;
+        if(auth.googleUser(result.data.user)) user=result.data.user;
+      }
+      if(!user && !authReturn) C.guest=auth.readGuest();
+      if(!user && !C.guest){ leaveApp(authReturn); return; }
+    }
     var profile=await fetchProfile();
-    C.uid=user.id;
-    C.user=user;
+    C.uid=C.guest ? profile.id : user.id;
+    C.user=user||C.guest;
     C.revision=profile.revision;
     C.epoch=profile.epoch;
     var pending=readPending();
@@ -1524,7 +1546,7 @@ window.addEventListener("appinstalled", function(){ installEvt=null; renderGetAp
 /* ---------- boot ---------- */
 $("#gate-retry").addEventListener("click", boot);
 if(sb) sb.auth.onAuthStateChange(function(event, session){
-  if(C.uid && (event==="SIGNED_OUT" || (session && session.user.id!==C.uid))) leaveApp();
+  if(C.uid && !C.guest && (event==="SIGNED_OUT" || (session && session.user.id!==C.uid))) leaveApp();
 });
 window.addEventListener("pageshow", function(event){ if(event.persisted) location.reload(); });
 if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){

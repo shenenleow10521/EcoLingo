@@ -2,6 +2,9 @@
 
 const signInButton = document.getElementById("google-sign-in");
 const signInStatus = document.getElementById("sign-in-status");
+const guestForm = document.getElementById("guest-form");
+const guestName = document.getElementById("guest-name");
+const guestStatus = document.getElementById("guest-status");
 const auth = window.EcoLingoAuth;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 let returningPlayer = false;
@@ -23,12 +26,36 @@ signInButton.addEventListener("click", async () => {
     await auth.signIn();
   } catch (error) {
     console.warn("EcoLingo sign-in:", error.message);
-    signInStatus.textContent = "Google sign-in is unavailable right now. Please try again.";
+    signInStatus.textContent = error.message === "Google sign-in is awaiting setup. You can play as a guest now."
+      ? error.message : "Google sign-in is unavailable right now. Please try again.";
     signInButton.disabled = false;
   }
 });
 
 signInButton.disabled = false;
+
+guestName.value = auth?.readGuest()?.nick || "";
+guestName.addEventListener("input", () => guestName.setCustomValidity(""));
+guestForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const nickname = guestName.value.trim().replace(/\s+/g, " ");
+  if (!nickname) {
+    guestName.setCustomValidity("Enter a nickname to play.");
+    guestName.reportValidity();
+    return;
+  }
+  const button = guestForm.querySelector("button");
+  button.disabled = true;
+  guestStatus.textContent = "Opening your guest profile…";
+  try {
+    await auth.startGuest(nickname);
+    location.assign(auth.appUrl("guest").href);
+  } catch (error) {
+    console.warn("EcoLingo guest:", error.message);
+    guestStatus.textContent = "Could not start guest play. Check your connection and browser storage, then try again.";
+    button.disabled = false;
+  }
+});
 
 if (auth?.client) {
   auth.client.auth.getSession().then(({ data }) => {

@@ -54,6 +54,15 @@ h1, h2, h3, p, dl, dd { margin: 0; }
 .google-sign-in:disabled { opacity: .66; cursor: wait; }
 .google-mark { width: 21px; height: 21px; flex: none; }
 .google-sign-in .icon { width: 17px; height: 17px; margin-left: 8px; }
+.guest-form { margin-top: 15px; }
+.guest-form label { display: block; margin-bottom: 6px; color: #cbd7c6; font-size: 13px; font-weight: 700; }
+.guest-fields { display: flex; flex-wrap: wrap; gap: 8px; }
+.guest-fields input { flex: 1 1 145px; min-width: 0; padding: 10px 12px; border: 1px solid #a4c3965e; border-radius: 7px; background: #13271d; color: var(--ink); font: inherit; }
+.guest-fields input::placeholder { color: #afc0ad; }
+.guest-play { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid #afd08396; border-radius: 7px; background: #243d28; color: #e4f6bd; font-size: 14px; font-weight: 800; transition: background .22s; }
+.guest-play:hover:not(:disabled) { background: #355133; }
+.guest-play:disabled { opacity: .66; cursor: wait; }
+.guest-play .icon { width: 17px; height: 17px; }
 .sign-in-note, .sign-in-status { margin-top: 7px; color: #afc0ad; font-size: 12px; }
 .sign-in-status { color: #f2d0a7; }
 .sign-in-status:empty { display: none; }
